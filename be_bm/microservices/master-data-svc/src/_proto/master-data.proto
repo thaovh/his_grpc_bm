@@ -1,0 +1,179 @@
+syntax = "proto3";
+
+package master_data;
+
+import "commons.proto";
+
+import "master-data/unit-of-measure.proto";
+import "master-data/export-status.proto";
+import "master-data/branch.proto";
+import "master-data/department-type.proto";
+import "master-data/department.proto";
+import "master-data/machine-funding-source.proto";
+import "master-data/manufacturer-country.proto";
+import "master-data/machine-document-type.proto";
+import "master-data/machine-category.proto";
+import "master-data/machine-status.proto";
+import "master-data/machine-unit.proto";
+import "master-data/vendor.proto";
+import "master-data/maintenance-type.proto";
+import "master-data/transfer-status.proto";
+import "master-data/transfer-type.proto";
+import "master-data/manufacturer.proto";
+import "master-data/notification-type.proto";
+
+// Service definitions
+service MasterDataService {
+  // Unit of Measure
+  rpc findAllUnitOfMeasures (commons.Query) returns (UnitOfMeasureList) {}
+  rpc findUnitOfMeasureById (commons.Id) returns (UnitOfMeasure) {}
+  rpc findUnitOfMeasureByCode (commons.Name) returns (UnitOfMeasure) {}
+  rpc countUnitOfMeasures (commons.Query) returns (commons.Count) {}
+  rpc createUnitOfMeasure (CreateUnitOfMeasureInput) returns (UnitOfMeasure) {}
+  rpc updateUnitOfMeasure (UpdateUnitOfMeasureInput) returns (UnitOfMeasure) {}
+  rpc destroyUnitOfMeasure (commons.Query) returns (commons.Count) {}
+  
+  // Export Status
+  rpc findAllExportStatuses (commons.Query) returns (ExportStatusList) {}
+  rpc findExportStatusById (commons.Id) returns (ExportStatus) {}
+  rpc findExportStatusByCode (commons.Name) returns (ExportStatus) {}
+  rpc countExportStatuses (commons.Query) returns (commons.Count) {}
+  rpc createExportStatus (CreateExportStatusInput) returns (ExportStatus) {}
+  rpc updateExportStatus (UpdateExportStatusInput) returns (ExportStatus) {}
+  rpc destroyExportStatus (commons.Query) returns (commons.Count) {}
+
+  // Branch
+  rpc findAllBranches (commons.Query) returns (BranchList) {}
+  rpc findBranchById (commons.Id) returns (Branch) {}
+  rpc findBranchByCode (commons.Name) returns (Branch) {}
+  rpc countBranches (commons.Query) returns (commons.Count) {}
+  rpc createBranch (CreateBranchInput) returns (Branch) {}
+  rpc updateBranch (UpdateBranchInput) returns (Branch) {}
+  rpc destroyBranch (commons.Query) returns (commons.Count) {}
+
+  // Department Type
+  rpc findAllDepartmentTypes (commons.Query) returns (DepartmentTypeList) {}
+  rpc findDepartmentTypeById (commons.Id) returns (DepartmentType) {}
+  rpc findDepartmentTypeByCode (commons.Name) returns (DepartmentType) {}
+  rpc countDepartmentTypes (commons.Query) returns (commons.Count) {}
+  rpc createDepartmentType (CreateDepartmentTypeInput) returns (DepartmentType) {}
+  rpc updateDepartmentType (UpdateDepartmentTypeInput) returns (DepartmentType) {}
+  rpc destroyDepartmentType (commons.Query) returns (commons.Count) {}
+
+  // Department
+  rpc findAllDepartments (commons.Query) returns (DepartmentList) {}
+  rpc findDepartmentById (commons.Id) returns (Department) {}
+  rpc findDepartmentByCode (commons.Name) returns (Department) {}
+  rpc countDepartments (commons.Query) returns (commons.Count) {}
+  rpc createDepartment (CreateDepartmentInput) returns (Department) {}
+  rpc updateDepartment (UpdateDepartmentInput) returns (Department) {}
+  rpc destroyDepartment (commons.Query) returns (commons.Count) {}
+
+  // Machine Funding Source
+  rpc findAllMachineFundingSources (commons.Query) returns (MachineFundingSourceList) {}
+  rpc findMachineFundingSourceById (commons.Id) returns (MachineFundingSource) {}
+  rpc findMachineFundingSourceByCode (commons.Name) returns (MachineFundingSource) {}
+  rpc countMachineFundingSources (commons.Query) returns (commons.Count) {}
+  rpc createMachineFundingSource (CreateMachineFundingSourceInput) returns (MachineFundingSource) {}
+  rpc updateMachineFundingSource (UpdateMachineFundingSourceInput) returns (MachineFundingSource) {}
+  rpc destroyMachineFundingSource (commons.Query) returns (commons.Count) {}
+
+  // Manufacturer Country
+  rpc findAllManufacturerCountries (commons.Query) returns (ManufacturerCountryList) {}
+  rpc findManufacturerCountryById (commons.Id) returns (ManufacturerCountry) {}
+  rpc findManufacturerCountryByCode (commons.Name) returns (ManufacturerCountry) {}
+  rpc countManufacturerCountries (commons.Query) returns (commons.Count) {}
+  rpc createManufacturerCountry (CreateManufacturerCountryInput) returns (ManufacturerCountry) {}
+  rpc updateManufacturerCountry (UpdateManufacturerCountryInput) returns (ManufacturerCountry) {}
+  rpc destroyManufacturerCountry (commons.Query) returns (commons.Count) {}
+
+  // Machine Document Type
+  rpc findAllMachineDocumentTypes (commons.Query) returns (MachineDocumentTypeList) {}
+  rpc findMachineDocumentTypeById (commons.Id) returns (MachineDocumentType) {}
+  rpc findMachineDocumentTypeByCode (commons.Name) returns (MachineDocumentType) {}
+  rpc countMachineDocumentTypes (commons.Query) returns (commons.Count) {}
+  rpc createMachineDocumentType (CreateMachineDocumentTypeInput) returns (MachineDocumentType) {}
+  rpc updateMachineDocumentType (UpdateMachineDocumentTypeInput) returns (MachineDocumentType) {}
+  rpc destroyMachineDocumentType (commons.Query) returns (commons.Count) {}
+
+  // Machine Category
+  rpc findAllMachineCategories (commons.Query) returns (MachineCategoryList) {}
+  rpc findMachineCategoryById (commons.Id) returns (MachineCategory) {}
+  rpc findMachineCategoryByCode (commons.Name) returns (MachineCategory) {}
+  rpc countMachineCategories (commons.Query) returns (commons.Count) {}
+  rpc createMachineCategory (CreateMachineCategoryInput) returns (MachineCategory) {}
+  rpc updateMachineCategory (UpdateMachineCategoryInput) returns (MachineCategory) {}
+  rpc destroyMachineCategory (commons.Query) returns (commons.Count) {}
+
+  // Machine Status
+  rpc findAllMachineStatuses (commons.Query) returns (MachineStatusList) {}
+  rpc findMachineStatusById (commons.Id) returns (MachineStatus) {}
+  rpc findMachineStatusByCode (commons.Name) returns (MachineStatus) {}
+  rpc countMachineStatuses (commons.Query) returns (commons.Count) {}
+  rpc createMachineStatus (CreateMachineStatusInput) returns (MachineStatus) {}
+  rpc updateMachineStatus (UpdateMachineStatusInput) returns (MachineStatus) {}
+  rpc destroyMachineStatus (commons.Query) returns (commons.Count) {}
+
+  // Machine Unit
+  rpc findAllMachineUnits (commons.Query) returns (MachineUnitList) {}
+  rpc findMachineUnitById (commons.Id) returns (MachineUnit) {}
+  rpc findMachineUnitByCode (commons.Name) returns (MachineUnit) {}
+  rpc countMachineUnits (commons.Query) returns (commons.Count) {}
+  rpc createMachineUnit (CreateMachineUnitInput) returns (MachineUnit) {}
+  rpc updateMachineUnit (UpdateMachineUnitInput) returns (MachineUnit) {}
+  rpc destroyMachineUnit (commons.Query) returns (commons.Count) {}
+
+  // Vendor
+  rpc findAllVendors (commons.Query) returns (VendorList) {}
+  rpc findVendorById (commons.Id) returns (Vendor) {}
+  rpc findVendorByCode (commons.Name) returns (Vendor) {}
+  rpc countVendors (commons.Query) returns (commons.Count) {}
+  rpc createVendor (CreateVendorInput) returns (Vendor) {}
+  rpc updateVendor (UpdateVendorInput) returns (Vendor) {}
+  rpc destroyVendor (commons.Query) returns (commons.Count) {}
+
+  // Maintenance Type
+  rpc findAllMaintenanceTypes (commons.Query) returns (MaintenanceTypeList) {}
+  rpc findMaintenanceTypeById (commons.Id) returns (MaintenanceType) {}
+  rpc findMaintenanceTypeByCode (commons.Name) returns (MaintenanceType) {}
+  rpc countMaintenanceTypes (commons.Query) returns (commons.Count) {}
+  rpc createMaintenanceType (CreateMaintenanceTypeInput) returns (MaintenanceType) {}
+  rpc updateMaintenanceType (UpdateMaintenanceTypeInput) returns (MaintenanceType) {}
+  rpc destroyMaintenanceType (commons.Query) returns (commons.Count) {}
+
+  // Transfer Status
+  rpc findAllTransferStatuses (commons.Query) returns (TransferStatusList) {}
+  rpc findTransferStatusById (commons.Id) returns (TransferStatus) {}
+  rpc findTransferStatusByCode (commons.Name) returns (TransferStatus) {}
+  rpc countTransferStatuses (commons.Query) returns (commons.Count) {}
+  rpc createTransferStatus (CreateTransferStatusInput) returns (TransferStatus) {}
+  rpc updateTransferStatus (UpdateTransferStatusInput) returns (TransferStatus) {}
+  rpc destroyTransferStatus (commons.Query) returns (commons.Count) {}
+
+  rpc findAllTransferTypes (commons.Query) returns (TransferTypeList) {}
+  rpc findTransferTypeById (commons.Id) returns (TransferType) {}
+  rpc findTransferTypeByCode (commons.Name) returns (TransferType) {}
+  rpc countTransferTypes (commons.Query) returns (commons.Count) {}
+  rpc createTransferType (CreateTransferTypeInput) returns (TransferType) {}
+  rpc updateTransferType (UpdateTransferTypeInput) returns (TransferType) {}
+  rpc destroyTransferType (commons.Query) returns (commons.Count) {}
+
+  // Manufacturer
+  rpc findAllManufacturers (commons.Query) returns (ManufacturerList) {}
+  rpc findManufacturerById (commons.Id) returns (Manufacturer) {}
+  rpc findManufacturerByCode (commons.Name) returns (Manufacturer) {}
+  rpc countManufacturers (commons.Query) returns (commons.Count) {}
+  rpc createManufacturer (CreateManufacturerInput) returns (Manufacturer) {}
+  rpc updateManufacturer (UpdateManufacturerInput) returns (Manufacturer) {}
+  rpc destroyManufacturer (commons.Query) returns (commons.Count) {}
+
+  // Notification Type
+  rpc findAllNotificationTypes (commons.Query) returns (NotificationTypeList) {}
+  rpc findNotificationTypeById (commons.Id) returns (NotificationType) {}
+  rpc findNotificationTypeByCode (commons.Name) returns (NotificationType) {}
+  rpc countNotificationTypes (commons.Query) returns (commons.Count) {}
+  rpc createNotificationType (CreateNotificationTypeInput) returns (NotificationType) {}
+  rpc updateNotificationType (UpdateNotificationTypeInput) returns (NotificationType) {}
+  rpc destroyNotificationType (commons.Query) returns (commons.Count) {}
+}
+

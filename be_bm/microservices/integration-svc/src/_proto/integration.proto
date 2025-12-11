@@ -1,0 +1,652 @@
+syntax = "proto3";
+
+package integration;
+
+import "commons.proto";
+
+// HIS Authentication Request
+message HisLoginRequest {
+  string username = 1;
+  string password = 2;
+  string deviceId = 3;
+  string ipAddress = 4;
+  string userAgent = 5;
+}
+
+// HIS Role Information
+message HisRole {
+  string roleCode = 1;
+  string roleName = 2;
+}
+
+// HIS User Information
+message HisUserInfo {
+  string loginName = 1;
+  string userName = 2;
+  string applicationCode = 3;
+  string gCode = 4;
+  string email = 5;
+  string mobile = 6;
+  repeated HisRole roles = 7;
+}
+
+// HIS Login Response
+message HisLoginResponse {
+  bool success = 1;
+  string message = 2;
+  string tokenCode = 3;
+  string renewCode = 4;
+  string loginTime = 5;
+  string expireTime = 6;
+  string validAddress = 7;
+  string loginAddress = 8;
+  string versionApp = 9;
+  string machineName = 10;
+  string lastAccessTime = 11;
+  HisUserInfo user = 12;
+}
+
+// User Synchronization Request
+message SyncUserRequest {
+  HisUserInfo user = 1;
+}
+
+// User Synchronization Response
+message SyncUserResponse {
+  string userId = 1;
+  bool created = 2;
+  string username = 3;
+  string email = 4;
+}
+
+// Get Token Request
+message GetTokenRequest {
+  string userId = 1;
+}
+
+// Get Token Response
+message GetTokenResponse {
+  bool found = 1;
+  string tokenCode = 2;
+  string renewCode = 3;
+  string expireTime = 4;
+  string loginTime = 5;
+}
+
+// Invalidate Token Request
+message InvalidateTokenRequest {
+  string userId = 1;
+}
+
+// Renew Token Request
+message RenewTokenRequest {
+  string renewCode = 1;
+  string userId = 2; // Optional: for logging and Redis update
+}
+
+// Renew Token Response
+message RenewTokenResponse {
+  bool success = 1;
+  string message = 2;
+  string tokenCode = 3;
+  string renewCode = 4;
+  string loginTime = 5;
+  string expireTime = 6;
+  string validAddress = 7;
+  string loginAddress = 8;
+  string versionApp = 9;
+  string machineName = 10;
+  string lastAccessTime = 11;
+}
+
+// Enrich Data Request
+message EnrichDataRequest {
+  string username = 1; // Username to enrich
+}
+
+// Enrich Data Response
+message EnrichDataResponse {
+  bool success = 1;
+  int32 totalRecords = 2;
+  int32 processedRecords = 3;
+  int32 failedRecords = 4;
+  string message = 5;
+}
+
+// Get User Rooms Request
+message GetUserRoomsRequest {
+  string userId = 1;
+}
+
+// User Room Information
+message UserRoom {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  string creator = 4;
+  string modifier = 5;
+  string appCreator = 6;
+  string appModifier = 7;
+  int32 isActive = 8;
+  int32 isDelete = 9;
+  string loginname = 10;
+  int64 roomId = 11;
+  string roomCode = 12;
+  string roomName = 13;
+  int64 departmentId = 14;
+  int64 roomTypeId = 15;
+  string roomTypeCode = 16;
+  string roomTypeName = 17;
+  string departmentCode = 18;
+  string departmentName = 19;
+  int32 isPause = 20;
+  int64 branchId = 21;
+  string branchCode = 22;
+  string branchName = 23;
+  string heinMediOrgCode = 24;
+}
+
+// Get User Rooms Response
+message GetUserRoomsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated UserRoom data = 3;
+}
+
+// MediStock information
+message MediStock {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  string creator = 4;
+  string modifier = 5;
+  string appCreator = 6;
+  string appModifier = 7;
+  int32 isActive = 8;
+  int32 isDelete = 9;
+  string mediStockCode = 10;
+  string mediStockName = 11;
+  int64 roomId = 12;
+  int32 isAllowImpSupplier = 13;
+  int32 isBusiness = 14;
+  int32 isAutoCreateChmsImp = 15;
+  int32 isDrugStore = 16;
+  int64 departmentId = 17;
+  int64 roomTypeId = 18;
+  string roomTypeCode = 19;
+  string roomTypeName = 20;
+  string departmentCode = 21;
+  string departmentName = 22;
+  string gCode = 23;
+}
+
+// Get MediStock by roomId
+message GetMediStockByRoomIdRequest {
+  int64 roomId = 1;
+}
+
+message GetMediStockByRoomIdResponse {
+  bool success = 1;
+  string message = 2;
+  int64 id = 3; // mediStockId
+  MediStock data = 4;
+}
+
+// Reload MediStock cache
+message ReloadMediStockRequest {}
+
+message ReloadMediStockResponse {
+  bool success = 1;
+  string message = 2;
+  int32 count = 3;
+}
+
+// ExpMestStt information
+message ExpMestStt {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  string modifier = 4;
+  string appModifier = 5;
+  int32 isActive = 6;
+  int32 isDelete = 7;
+  string expMestSttCode = 8;
+  string expMestSttName = 9;
+}
+
+message GetExpMestSttResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMestStt data = 3;
+}
+
+message ReloadExpMestSttRequest {}
+
+message ReloadExpMestSttResponse {
+  bool success = 1;
+  string message = 2;
+  int32 count = 3;
+}
+
+// ExpMestType information
+message ExpMestType {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  int32 isActive = 4;
+  int32 isDelete = 5;
+  string expMestTypeCode = 6;
+  string expMestTypeName = 7;
+}
+
+message GetExpMestTypeResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMestType data = 3;
+}
+
+message ReloadExpMestTypeRequest {}
+
+message ReloadExpMestTypeResponse {
+  bool success = 1;
+  string message = 2;
+  int32 count = 3;
+}
+
+// ExpMest information
+message ExpMest {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  string creator = 4;
+  string modifier = 5;
+  string appCreator = 6;
+  string appModifier = 7;
+  int32 isActive = 8;
+  int32 isDelete = 9;
+  string expMestCode = 10;
+  int64 expMestTypeId = 11;
+  int64 expMestSttId = 12;
+  int64 mediStockId = 13;
+  string reqLoginname = 14;
+  string reqUsername = 15;
+  int64 reqRoomId = 16;
+  int64 reqDepartmentId = 17;
+  int64 createDate = 18;
+  int64 serviceReqId = 19;
+  double tdlTotalPrice = 20;
+  string tdlServiceReqCode = 21;
+  int64 tdlIntructionTime = 22;
+  int64 tdlIntructionDate = 23;
+  int64 tdlTreatmentId = 24;
+  string tdlTreatmentCode = 25;
+  int64 tdlPatientId = 26;
+  string tdlPatientCode = 27;
+  string tdlPatientName = 28;
+  string tdlPatientFirstName = 29;
+  string tdlPatientLastName = 30;
+  int64 tdlPatientDob = 31;
+  int32 tdlPatientIsHasNotDayDob = 32;
+  string tdlPatientAddress = 33;
+  int64 tdlPatientGenderId = 34;
+  string tdlPatientGenderName = 35;
+  int64 tdlPatientTypeId = 36;
+  string tdlHeinCardNumber = 37;
+  string tdlPatientPhone = 38;
+  string tdlPatientProvinceCode = 39;
+  string tdlPatientCommuneCode = 40;
+  string tdlPatientNationalName = 41;
+  int64 virCreateMonth = 42;
+  string icdCode = 43;
+  string icdName = 44;
+  string reqUserTitle = 45;
+  string expMestSubCode2 = 46;
+  int32 virCreateYear = 47;
+  string virHeinCardPrefix = 48;
+  int32 priority = 49;
+  string expMestTypeCode = 50;
+  string expMestTypeName = 51;
+  string expMestSttCode = 52;
+  string expMestSttName = 53;
+  string mediStockCode = 54;
+  string mediStockName = 55;
+  string reqDepartmentCode = 56;
+  string reqDepartmentName = 57;
+  string reqRoomCode = 58;
+  string reqRoomName = 59;
+  int32 treatmentIsActive = 60;
+  string patientTypeName = 61;
+  string patientTypeCode = 62;
+  string icdSubCode = 63;
+  string icdText = 64;
+  string tdlPatientDistrictCode = 65;
+  string tdlAggrPatientCode = 66;
+  string tdlAggrTreatmentCode = 67;
+  string lastExpLoginname = 68;
+  string lastExpUsername = 69;
+  int64 lastExpTime = 70;
+  int64 finishTime = 71;
+  int64 finishDate = 72;
+  int32 isExportEqualApprove = 73;
+  string expMestSubCode = 74;
+  string lastApprovalLoginname = 75;
+  string lastApprovalUsername = 76;
+  int64 lastApprovalTime = 77;
+  int64 lastApprovalDate = 78;
+  int64 numOrder = 79;
+  int64 tdlIntructionDateMin = 80;
+  string groupCode = 81;
+  string reqHeadUsername = 82;
+  string currentBedIds = 83;
+}
+
+// Get ExpMest Request with filters
+message GetExpMestRequest {
+  repeated int64 expMestSttIds = 1;
+  repeated int64 expMestTypeIds = 2;
+  int64 impOrExpMediStockId = 3;
+  int64 createTimeFrom = 4; // timestamp: 20251215000000
+  int64 createTimeTo = 5;   // timestamp: 20251215235959
+  int32 start = 6;
+  int32 limit = 7;
+  string expMestCodeExact = 8; // filter by exact EXP_MEST_CODE
+  int64 workingRoomId = 9;     // WORKING_ROOM_ID for data domain filter
+  bool dataDomainFilter = 10;  // DATA_DOMAIN_FILTER flag
+  string keyword = 11;
+  string userId = 12;
+}
+
+// UpdateWorkInfo (register working rooms)
+message UpdateWorkInfoRoom {
+  int64 roomId = 1;
+  int64 deskId = 2;
+}
+
+message UpdateWorkInfoRequest {
+  repeated int64 roomIds = 1;
+  repeated UpdateWorkInfoRoom rooms = 2;
+  int64 workingShiftId = 3;
+  string nurseLoginName = 4;
+  string nurseUserName = 5;
+  string userId = 6;
+}
+
+message UpdateWorkInfoResponse {
+  bool success = 1;
+  string message = 2;
+  repeated UpdateWorkInfoRoomResult data = 3;
+}
+
+message UpdateWorkInfoRoomResult {
+  int64 roomTypeId = 1;
+  int64 bedRoomId = 2;
+  string roomName = 3;
+  string roomCode = 4;
+  int64 roomId = 5;
+  int64 branchId = 6;
+  string branchName = 7;
+  string branchCode = 8;
+  int64 departmentId = 9;
+  string departmentName = 10;
+  string departmentCode = 11;
+  int64 mediStockId = 12;
+}
+
+// Get ExpMest Response
+message GetExpMestResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMest data = 3;
+  int32 start = 4;
+  int32 limit = 5;
+  int32 count = 6;
+  int32 total = 7;
+}
+
+// Get ExpMest by ID Request
+message GetExpMestByIdRequest {
+  int64 expMestId = 1;
+  bool includeDeleted = 2;
+  bool dataDomainFilter = 3;
+  string userId = 4;
+}
+
+// Get ExpMest by ID Response
+message GetExpMestByIdResponse {
+  bool success = 1;
+  string message = 2;
+  ExpMest data = 3;
+}
+
+// Inpatient aggregated ExpMest list (HIS GetView3)
+message GetInpatientExpMestRequest {
+  repeated int64 expMestSttIds = 1;
+  int64 expMestTypeId = 2;
+  int64 mediStockId = 3;
+  int64 createTimeFrom = 4;
+  int64 createTimeTo = 5;
+  int32 start = 6;
+  int32 limit = 7;
+  string orderField = 8;
+  string orderDirection = 9;
+  bool includeDeleted = 10;
+  string keyword = 11;
+  bool dataDomainFilter = 12;
+  string userId = 13;
+}
+
+message GetInpatientExpMestResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMest data = 3;
+  int32 start = 4;
+  int32 limit = 5;
+  int32 count = 6;
+  int32 total = 7;
+}
+
+// Get Inpatient ExpMest by ID (HIS GetView)
+message GetInpatientExpMestByIdRequest {
+  int64 expMestId = 1;
+  bool includeDeleted = 2;
+  bool dataDomainFilter = 3;
+  string userId = 4;
+}
+
+message GetInpatientExpMestByIdResponse {
+  bool success = 1;
+  string message = 2;
+  ExpMest data = 3; // Single ExpMest or null if not found
+}
+
+// Get Inpatient ExpMest Details (chi tiết các phiếu con) by AGGR_EXP_MEST_ID (HIS GetView)
+message GetInpatientExpMestDetailsRequest {
+  int64 aggrExpMestId = 1;
+  bool includeDeleted = 2;
+  bool dataDomainFilter = 3;
+  string userId = 4;
+}
+
+message GetInpatientExpMestDetailsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMest data = 3; // List of child exp mests in aggregated exp mest
+}
+
+// ExpMestMedicine information (chi tiết thuốc trong phiếu xuất)
+message ExpMestMedicine {
+  int64 id = 1;
+  int64 createTime = 2;
+  int64 modifyTime = 3;
+  string creator = 4;
+  string modifier = 5;
+  string appCreator = 6;
+  string appModifier = 7;
+  int32 isActive = 8;
+  int32 isDelete = 9;
+  int64 expMestId = 10;
+  int64 medicineId = 11;
+  int64 tdlMediStockId = 12;
+  int64 tdlMedicineTypeId = 13;
+  int64 expMestMetyReqId = 14;
+  int64 ckImpMestMedicineId = 15;
+  int32 isExport = 16;
+  double amount = 17;
+  string approvalLoginname = 18;
+  string approvalUsername = 19;
+  int64 approvalTime = 20;
+  int64 approvalDate = 21;
+  string expLoginname = 22;
+  string expUsername = 23;
+  int64 expTime = 24;
+  int64 expDate = 25;
+  string expMestCode = 26;
+  int64 mediStockId = 27;
+  int64 expMestSttId = 28;
+  double impPrice = 29;
+  double impVatRatio = 30;
+  int64 bidId = 31;
+  string packageNumber = 32;
+  int64 expiredDate = 33;
+  int64 medicineTypeId = 34;
+  int64 impTime = 35;
+  int64 supplierId = 36;
+  string medicineBytNumOrder = 37;
+  string medicineRegisterNumber = 38;
+  string activeIngrBhytCode = 39;
+  string activeIngrBhytName = 40;
+  string concentra = 41;
+  string tdlBidGroupCode = 42;
+  string tdlBidPackageCode = 43;
+  string medicineTypeCode = 44;
+  string medicineTypeName = 45;
+  int64 serviceId = 46;
+  string nationalName = 47;
+  int64 manufacturerId = 48;
+  string bytNumOrder = 49;
+  string registerNumber = 50;
+  int64 medicineGroupId = 51;
+  int64 serviceUnitId = 52;
+  string serviceUnitCode = 53;
+  string serviceUnitName = 54;
+  int32 medicineNumOrder = 55;
+  string supplierCode = 56;
+  string supplierName = 57;
+  string bidNumber = 58;
+  string bidName = 59;
+  string medicineUseFormCode = 60;
+  string medicineUseFormName = 61;
+  int32 medicineUseFormNumOrder = 62;
+  double sumInStock = 63;
+  double sumByMedicineInStock = 64;
+  int32 materialNumOrder = 65;
+  // Price & Tax Info (Additional)
+  double price = 66;
+  double vatRatio = 67;
+  double virPrice = 68;
+  double taxRatio = 69;
+  // Order & Amount Info
+  int64 numOrder = 70;
+  double presAmount = 71;
+  // Patient & Treatment Info
+  int64 patientTypeId = 72;
+  string patientTypeCode = 73;
+  string patientTypeName = 74;
+  int64 tdlPatientId = 75;
+  int64 tdlTreatmentId = 76;
+  int64 tdlServiceReqId = 77;
+  // Instruction & Tutorial
+  int64 useTimeTo = 78;
+  string tutorial = 79;
+  int64 tdlIntructionTime = 80;
+  int64 tdlIntructionDate = 81;
+  string htuText = 82;
+  // Dosage Info
+  string morning = 83;
+  string evening = 84;
+  // ExpMest Denormalized Info (Additional)
+  int64 expMestTypeId = 85;
+  int64 tdlAggrExpMestId = 86;
+  int64 aggrExpMestId = 87;
+  int64 reqRoomId = 88;
+  int64 reqDepartmentId = 89;
+  string reqUserTitle = 90;
+  string reqLoginname = 91;
+  string reqUsername = 92;
+  // Medicine Group & Use Form (Additional)
+  int64 medicineUseFormId = 93;
+  int64 medicineLineId = 94;
+  string medicineGroupCode = 95;
+  string medicineGroupName = 96;
+  int32 medicineGroupNumOrder = 97;
+  // Manufacturer & Stock Info (Additional)
+  string manufacturerCode = 98;
+  string manufacturerName = 99;
+  string mediStockCode = 100;
+  string mediStockName = 101;
+}
+
+// Get ExpMestMedicine Request
+message GetExpMestMedicinesRequest {
+  int64 expMestId = 1; // ID của phiếu xuất từ HIS
+  string userId = 2;
+}
+
+// Get ExpMestMedicine Response
+message GetExpMestMedicinesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ExpMestMedicine data = 3;
+}
+
+// Get ExpMestMedicines by IDs Request
+message GetExpMestMedicinesByIdsRequest {
+  repeated int64 expMestIds = 1; // Array of ExpMest IDs from HIS
+  bool includeDeleted = 2; // IS_INCLUDE_DELETED
+  bool dataDomainFilter = 3; // DATA_DOMAIN_FILTER
+  string userId = 4;
+}
+
+// Get ExpMestMedicines by IDs Response (reuse GetExpMestMedicinesResponse)
+
+// Get ExpMest Cabinet Request
+message GetExpMestCabinetRequest {
+  repeated int64 expMestSttIds = 1;
+  repeated int64 chmsTypeIds = 2;
+  int64 expMestTypeId = 3;
+  int64 mediStockIdOrImpMediStockId = 4;
+  string createDateFrom = 5;
+  string createDateTo = 6;
+  bool isIncludeDeleted = 7;
+  string keyword = 8;
+  bool dataDomainFilter = 9;
+  int32 start = 10;
+  int32 limit = 11;
+  string userId = 12;
+}
+
+service IntegrationService {
+  rpc hisLogin (HisLoginRequest) returns (HisLoginResponse) {}
+  rpc syncUser (SyncUserRequest) returns (SyncUserResponse) {}
+  rpc getToken (GetTokenRequest) returns (GetTokenResponse) {}
+  rpc invalidateToken (InvalidateTokenRequest) returns (commons.Count) {}
+  rpc renewToken (RenewTokenRequest) returns (RenewTokenResponse) {}
+  rpc enrichData (EnrichDataRequest) returns (EnrichDataResponse) {}
+  rpc getUserRooms (GetUserRoomsRequest) returns (GetUserRoomsResponse) {}
+  rpc reloadUserRooms (GetUserRoomsRequest) returns (GetUserRoomsResponse) {}
+  rpc getMediStockByRoomId (GetMediStockByRoomIdRequest) returns (GetMediStockByRoomIdResponse) {}
+  rpc reloadMediStock (ReloadMediStockRequest) returns (ReloadMediStockResponse) {}
+  rpc getExpMestStt (commons.Empty) returns (GetExpMestSttResponse) {}
+  rpc reloadExpMestStt (ReloadExpMestSttRequest) returns (ReloadExpMestSttResponse) {}
+  rpc getExpMestType (commons.Empty) returns (GetExpMestTypeResponse) {}
+  rpc reloadExpMestType (ReloadExpMestTypeRequest) returns (ReloadExpMestTypeResponse) {}
+  rpc getExpMests (GetExpMestRequest) returns (GetExpMestResponse) {}
+  rpc getExpMestById (GetExpMestByIdRequest) returns (GetExpMestByIdResponse) {}
+  rpc getInpatientExpMests (GetInpatientExpMestRequest) returns (GetInpatientExpMestResponse) {}
+  rpc getInpatientExpMestById (GetInpatientExpMestByIdRequest) returns (GetInpatientExpMestByIdResponse) {}
+  rpc getInpatientExpMestDetails (GetInpatientExpMestDetailsRequest) returns (GetInpatientExpMestDetailsResponse) {}
+  rpc getExpMestMedicines (GetExpMestMedicinesRequest) returns (GetExpMestMedicinesResponse) {}
+  rpc getExpMestMedicinesByIds (GetExpMestMedicinesByIdsRequest) returns (GetExpMestMedicinesResponse) {}
+  rpc getExpMestCabinets (GetExpMestCabinetRequest) returns (GetExpMestResponse) {}
+  rpc updateWorkInfo (UpdateWorkInfoRequest) returns (UpdateWorkInfoResponse) {}
+}

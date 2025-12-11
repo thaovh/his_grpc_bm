@@ -1,0 +1,107 @@
+export class UpdateInpatientExpMestMedicineDto {
+  readonly inpatientExpMestId?: number | null;
+  readonly inpatientExpMestLocalId?: string | null; // UUID local của InpatientExpMestChild (optional)
+  readonly medicineId?: number | null;
+  readonly tdlMediStockId?: number | null;
+  readonly tdlMedicineTypeId?: number | null;
+  readonly expMestMetyReqId?: number | null;
+  readonly ckImpMestMedicineId?: number | null;
+  readonly isExport?: number | null;
+  readonly amount?: number | null;
+  readonly exportAmount?: number | null;
+  readonly exportByUser?: string | null;
+  readonly exportTime?: number | null;
+  readonly approvalLoginname?: string | null;
+  readonly approvalUsername?: string | null;
+  readonly approvalTime?: number | null;
+  readonly approvalDate?: number | null;
+  readonly expLoginname?: string | null;
+  readonly expUsername?: string | null;
+  readonly expTime?: number | null;
+  readonly expDate?: number | null;
+  readonly expMestCode?: string | null;
+  readonly mediStockId?: number | null;
+  readonly expMestSttId?: number | null;
+  readonly impPrice?: number | null;
+  readonly impVatRatio?: number | null;
+  readonly bidId?: number | null;
+  readonly packageNumber?: string | null;
+  readonly expiredDate?: number | null;
+  readonly medicineTypeId?: number | null;
+  readonly medicineTypeCode?: string | null;
+  readonly medicineTypeName?: string | null;
+  readonly impTime?: number | null;
+  readonly supplierId?: number | null;
+  readonly medicineBytNumOrder?: string | null;
+  readonly medicineRegisterNumber?: string | null;
+  readonly activeIngrBhytCode?: string | null;
+  readonly activeIngrBhytName?: string | null;
+  readonly concentra?: string | null;
+  readonly tdlBidGroupCode?: string | null;
+  readonly tdlBidPackageCode?: string | null;
+  readonly serviceId?: number | null;
+  readonly nationalName?: string | null;
+  readonly manufacturerId?: number | null;
+  readonly bytNumOrder?: string | null;
+  readonly registerNumber?: string | null;
+  readonly medicineGroupId?: number | null;
+  readonly serviceUnitId?: number | null;
+  readonly serviceUnitCode?: string | null;
+  readonly serviceUnitName?: string | null;
+  readonly medicineNumOrder?: number | null;
+  readonly supplierCode?: string | null;
+  readonly supplierName?: string | null;
+  readonly bidNumber?: string | null;
+  readonly bidName?: string | null;
+  readonly medicineUseFormCode?: string | null;
+  readonly medicineUseFormName?: string | null;
+  readonly medicineUseFormNumOrder?: number | null;
+  readonly sumInStock?: number | null;
+  readonly sumByMedicineInStock?: number | null;
+  // Price & Tax Info (Additional)
+  readonly price?: number | null;
+  readonly vatRatio?: number | null;
+  readonly virPrice?: number | null;
+  readonly taxRatio?: number | null;
+  // Order & Amount Info
+  readonly numOrder?: number | null;
+  readonly presAmount?: number | null;
+  // Patient & Treatment Info
+  readonly patientTypeId?: number | null;
+  readonly patientTypeCode?: string | null;
+  readonly patientTypeName?: string | null;
+  readonly tdlPatientId?: number | null;
+  readonly tdlTreatmentId?: number | null;
+  readonly tdlServiceReqId?: number | null;
+  // Instruction & Tutorial
+  readonly useTimeTo?: number | null;
+  readonly tutorial?: string | null;
+  readonly tdlIntructionTime?: number | null;
+  readonly tdlIntructionDate?: number | null;
+  readonly htuText?: string | null;
+  // Dosage Info
+  readonly morning?: string | null;
+  readonly evening?: string | null;
+  // ExpMest Denormalized Info (Additional)
+  readonly expMestTypeId?: number | null;
+  readonly tdlAggrExpMestId?: number | null;
+  readonly aggrExpMestId?: number | null;
+  readonly reqRoomId?: number | null;
+  readonly reqDepartmentId?: number | null;
+  readonly reqUserTitle?: string | null;
+  readonly reqLoginname?: string | null;
+  readonly reqUsername?: string | null;
+  // Medicine Group & Use Form (Additional)
+  readonly medicineUseFormId?: number | null;
+  readonly medicineLineId?: number | null;
+  readonly medicineGroupCode?: string | null;
+  readonly medicineGroupName?: string | null;
+  readonly medicineGroupNumOrder?: number | null;
+  // Manufacturer & Stock Info (Additional)
+  readonly manufacturerCode?: string | null;
+  readonly manufacturerName?: string | null;
+  readonly mediStockCode?: string | null;
+  readonly mediStockName?: string | null;
+  readonly updatedBy?: string | null;
+}
+

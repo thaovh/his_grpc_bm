@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -9,29 +10,63 @@ import { AuthController } from './controllers/auth.controller';
 import { AuthServiceImpl } from './services/auth.service';
 import { AuthRepository } from './repositories/auth.repository';
 
-@Module({
+@Module({ // Trigger reload for JWT fix
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([AuthToken]),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      signOptions: { 
-        expiresIn: process.env.JWT_EXPIRES_IN || '15m' 
-      },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key-change-in-production',
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
+        },
+      }),
     }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'USERS_PACKAGE',
-        transport: Transport.GRPC,
-        options: {
-          url: `${process.env.USERS_SVC_URL || 'localhost'}:${process.env.USERS_SVC_PORT || '50051'}`,
-          package: 'users',
-          protoPath: join(__dirname, '../_proto/users.proto'),
-          loader: {
-            enums: String,
-            objects: true,
-            arrays: true,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: `${configService.get('USERS_SVC_URL') || 'localhost'}:${configService.get('USERS_SVC_PORT') || '50052'}`,
+            package: 'users',
+            protoPath: join(__dirname, '../_proto/users.proto'),
+            loader: {
+              enums: String,
+              objects: true,
+              arrays: true,
+              keepCase: true,
+              defaults: true,
+              oneofs: true,
+              include: [join(__dirname, '../_proto')],
+            },
           },
-        },
+        }),
+      },
+      {
+        name: 'INTEGRATION_PACKAGE',
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            url: `${configService.get('INTEGRATION_SVC_URL') || 'localhost'}:${configService.get('INTEGRATION_SVC_PORT') || '50053'}`,
+            package: 'integration',
+            protoPath: join(__dirname, '../_proto/integration.proto'),
+            loader: {
+              enums: String,
+              objects: true,
+              arrays: true,
+              keepCase: true,
+              defaults: true,
+              oneofs: true,
+              include: [join(__dirname, '../_proto')],
+            },
+          },
+        }),
       },
     ]),
     LoggerModule.forRoot({
@@ -58,5 +93,5 @@ import { AuthRepository } from './repositories/auth.repository';
   ],
   exports: ['AuthService'],
 })
-export class AuthModule {}
+export class AuthModule { }
 

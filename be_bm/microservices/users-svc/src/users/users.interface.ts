@@ -20,6 +20,22 @@ export interface UsersService {
   create(userDto: CreateUserDto, passwordHash: string): Promise<User>;
   update(id: string, data: Partial<{ email: string; acsId: number | null }>): Promise<User>;
   updateProfile(userId: string, profileDto: UpdateUserProfileDto): Promise<UserProfile>;
+  updatePassword(id: string, passwordHash: string): Promise<User>;
   delete(id: string): Promise<void>;
+
+  // Device Token Management
+  saveDeviceToken(request: {
+    userId: string;
+    employeeCode: string;
+    deviceToken: string;
+    deviceType?: string;
+    deviceName?: string;
+    deviceOsVersion?: string;
+    appVersion?: string;
+  }): Promise<{ success: boolean; message: string }>;
+
+  removeDeviceToken(request: { deviceToken: string }): Promise<{ success: boolean; message: string }>;
+
+  getDeviceTokens(request: { employeeCode: string }): Promise<{ tokens: string[] }>;
 }
 

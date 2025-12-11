@@ -1,0 +1,506 @@
+syntax = "proto3";
+
+package inventory;
+
+import "../commons.proto";
+
+message InpatientExpMest {
+  string id = 1;
+  int64 hisExpMestId = 2;
+  string expMestCode = 3;
+  int64 expMestTypeId = 4;
+  int64 expMestSttId = 5;
+  int64 mediStockId = 6;
+  string reqLoginname = 7;
+  string reqUsername = 8;
+  int64 reqRoomId = 9;
+  int64 reqDepartmentId = 10;
+  int64 createDate = 11;
+  int64 tdlPatientTypeId = 12;
+  int64 virCreateMonth = 13;
+  int64 virCreateYear = 14;
+  string reqUserTitle = 15;
+  string expMestSubCode = 16;
+  string expMestSubCode2 = 17;
+  int64 numOrder = 18;
+  string tdlAggrPatientCode = 19;
+  string tdlAggrTreatmentCode = 20;
+  string expMestTypeCode = 21;
+  string expMestTypeName = 22;
+  string expMestSttCode = 23;
+  string expMestSttName = 24;
+  string mediStockCode = 25;
+  string mediStockName = 26;
+  string reqDepartmentCode = 27;
+  string reqDepartmentName = 28;
+  int64 tdlIntructionDateMin = 29;
+  string lastExpLoginname = 30;
+  string lastExpUsername = 31;
+  int64 lastExpTime = 32;
+  int64 finishTime = 33;
+  int64 finishDate = 34;
+  int32 isExportEqualApprove = 35;
+  string lastApprovalLoginname = 36;
+  string lastApprovalUsername = 37;
+  int64 lastApprovalTime = 38;
+  int64 lastApprovalDate = 39;
+  string reqRoomCode = 40;
+  string reqRoomName = 41;
+  string groupCode = 42;
+  string workingStateId = 43;
+  int64 hisCreateTime = 44;
+  int64 hisModifyTime = 45;
+  string hisCreator = 46;
+  string hisModifier = 47;
+  string createdAt = 48;
+  string updatedAt = 49;
+  string createdBy = 50;
+  string updatedBy = 51;
+  int32 version = 52;
+  int32 isActive = 53;
+}
+
+message CreateInpatientExpMestInput {
+  int64 hisExpMestId = 1;
+  string expMestCode = 2;
+  int64 expMestTypeId = 3;
+  int64 expMestSttId = 4;
+  int64 mediStockId = 5;
+  string reqLoginname = 6;
+  string reqUsername = 7;
+  int64 reqRoomId = 8;
+  int64 reqDepartmentId = 9;
+  int64 createDate = 10;
+  int64 tdlPatientTypeId = 11;
+  int64 virCreateMonth = 12;
+  int64 virCreateYear = 13;
+  string reqUserTitle = 14;
+  string expMestSubCode = 15;
+  string expMestSubCode2 = 16;
+  int64 numOrder = 17;
+  string tdlAggrPatientCode = 18;
+  string tdlAggrTreatmentCode = 19;
+  string expMestTypeCode = 20;
+  string expMestTypeName = 21;
+  string expMestSttCode = 22;
+  string expMestSttName = 23;
+  string mediStockCode = 24;
+  string mediStockName = 25;
+  string reqDepartmentCode = 26;
+  string reqDepartmentName = 27;
+  int64 tdlIntructionDateMin = 28;
+  string lastExpLoginname = 29;
+  string lastExpUsername = 30;
+  int64 lastExpTime = 31;
+  int64 finishTime = 32;
+  int64 finishDate = 33;
+  int32 isExportEqualApprove = 34;
+  string lastApprovalLoginname = 35;
+  string lastApprovalUsername = 36;
+  int64 lastApprovalTime = 37;
+  int64 lastApprovalDate = 38;
+  string reqRoomCode = 39;
+  string reqRoomName = 40;
+  string groupCode = 41;
+  string workingStateId = 42;
+  int64 hisCreateTime = 43;
+  int64 hisModifyTime = 44;
+  string hisCreator = 45;
+  string hisModifier = 46;
+  string createdBy = 47;
+}
+
+message UpdateInpatientExpMestInput {
+  string id = 1;
+  string expMestCode = 2;
+  int64 expMestTypeId = 3;
+  int64 expMestSttId = 4;
+  int64 mediStockId = 5;
+  string reqLoginname = 6;
+  string reqUsername = 7;
+  int64 reqRoomId = 8;
+  int64 reqDepartmentId = 9;
+  int64 createDate = 10;
+  int64 tdlPatientTypeId = 11;
+  int64 virCreateMonth = 12;
+  int64 virCreateYear = 13;
+  string reqUserTitle = 14;
+  string expMestSubCode = 15;
+  string expMestSubCode2 = 16;
+  int64 numOrder = 17;
+  string tdlAggrPatientCode = 18;
+  string tdlAggrTreatmentCode = 19;
+  string expMestTypeCode = 20;
+  string expMestTypeName = 21;
+  string expMestSttCode = 22;
+  string expMestSttName = 23;
+  string mediStockCode = 24;
+  string mediStockName = 25;
+  string reqDepartmentCode = 26;
+  string reqDepartmentName = 27;
+  int64 tdlIntructionDateMin = 28;
+  string lastExpLoginname = 29;
+  string lastExpUsername = 30;
+  int64 lastExpTime = 31;
+  int64 finishTime = 32;
+  int64 finishDate = 33;
+  int32 isExportEqualApprove = 34;
+  string lastApprovalLoginname = 35;
+  string lastApprovalUsername = 36;
+  int64 lastApprovalTime = 37;
+  int64 lastApprovalDate = 38;
+  string reqRoomCode = 39;
+  string reqRoomName = 40;
+  string groupCode = 41;
+  string workingStateId = 42;
+  int64 hisCreateTime = 43;
+  int64 hisModifyTime = 44;
+  string hisCreator = 45;
+  string hisModifier = 46;
+  string updatedBy = 47;
+}
+
+message InpatientExpMestList {
+  repeated InpatientExpMest data = 1;
+}
+
+message SyncInpatientExpMestInput {
+  map<string, string> hisData = 1;
+  string userId = 2;
+  string workingStateId = 3;
+}
+
+message SyncAllInpatientExpMestInput {
+  map<string, string> parentData = 1;
+  repeated string childrenData = 2;
+  repeated string medicinesData = 3;
+  string userId = 4;
+  string workingStateId = 5;
+}
+
+message InpatientExpMestChild {
+  string id = 1;
+  int64 hisExpMestId = 2;
+  int64 aggrExpMestId = 3;
+  string aggrExpMestLocalId = 4;
+  string expMestCode = 5;
+  int64 expMestTypeId = 6;
+  int64 expMestSttId = 7;
+  int64 mediStockId = 8;
+  string reqLoginname = 9;
+  string reqUsername = 10;
+  int64 reqRoomId = 11;
+  int64 reqDepartmentId = 12;
+  int64 createDate = 13;
+  int64 tdlPatientTypeId = 14;
+  int64 virCreateMonth = 15;
+  int64 virCreateYear = 16;
+  string reqUserTitle = 17;
+  string expMestSubCode = 18;
+  string expMestSubCode2 = 19;
+  int64 numOrder = 20;
+  string tdlAggrPatientCode = 21;
+  string tdlAggrTreatmentCode = 22;
+  string expMestTypeCode = 23;
+  string expMestTypeName = 24;
+  string expMestSttCode = 25;
+  string expMestSttName = 26;
+  string mediStockCode = 27;
+  string mediStockName = 28;
+  string reqDepartmentCode = 29;
+  string reqDepartmentName = 30;
+  int64 tdlIntructionDateMin = 31;
+  string lastExpLoginname = 32;
+  string lastExpUsername = 33;
+  int64 lastExpTime = 34;
+  int64 finishTime = 35;
+  int64 finishDate = 36;
+  int32 isExportEqualApprove = 37;
+  string lastApprovalLoginname = 38;
+  string lastApprovalUsername = 39;
+  int64 lastApprovalTime = 40;
+  int64 lastApprovalDate = 41;
+  string reqRoomCode = 42;
+  string reqRoomName = 43;
+  string groupCode = 44;
+  string workingStateId = 45;
+  int64 hisCreateTime = 46;
+  int64 hisModifyTime = 47;
+  string hisCreator = 48;
+  string hisModifier = 49;
+  int64 serviceReqId = 56;
+  double tdlTotalPrice = 57;
+  string tdlServiceReqCode = 58;
+  int64 tdlIntructionTime = 59;
+  int64 tdlIntructionDate = 60;
+  int64 tdlTreatmentId = 61;
+  string tdlTreatmentCode = 62;
+  string tdlAggrExpMestCode = 63;
+  int64 tdlPatientId = 64;
+  string tdlPatientCode = 65;
+  string tdlPatientName = 66;
+  string tdlPatientFirstName = 67;
+  string tdlPatientLastName = 68;
+  int64 tdlPatientDob = 69;
+  int32 tdlPatientIsHasNotDayDob = 70;
+  string tdlPatientAddress = 71;
+  int64 tdlPatientGenderId = 72;
+  string tdlPatientGenderName = 73;
+  string tdlHeinCardNumber = 74;
+  string tdlPatientPhone = 75;
+  string tdlPatientProvinceCode = 76;
+  string tdlPatientCommuneCode = 77;
+  string tdlPatientNationalName = 78;
+  string icdCode = 79;
+  string icdName = 80;
+  string icdSubCode = 81;
+  string icdText = 82;
+  string virHeinCardPrefix = 83;
+  int64 priority = 84;
+  string reqHeadUsername = 85;
+  string patientTypeName = 86;
+  string currentBedIds = 87;
+  string createdAt = 50;
+  string updatedAt = 51;
+  string createdBy = 52;
+  string updatedBy = 53;
+  int32 version = 54;
+  int32 isActive = 55;
+}
+
+message InpatientExpMestMedicine {
+  string id = 1;
+  int64 hisId = 2;
+  int64 inpatientExpMestChildId = 3;
+  string inpatientExpMestChildLocalId = 4;
+  int64 medicineId = 5;
+  int64 tdlMediStockId = 6;
+  int64 tdlMedicineTypeId = 7;
+  int64 expMestMetyReqId = 8;
+  int64 ckImpMestMedicineId = 9;
+  int32 isExport = 10;
+  double amount = 11;
+  double exportAmount = 12;
+  string exportByUser = 13;
+  int64 exportTime = 14;
+  double actualExportAmount = 176;
+  string actualExportByUser = 177;
+  int64 actualExportTime = 178;
+  string approvalLoginname = 15;
+  string approvalUsername = 16;
+  int64 approvalTime = 17;
+  int64 approvalDate = 18;
+  string expLoginname = 19;
+  string expUsername = 20;
+  int64 expTime = 21;
+  int64 expDate = 22;
+  string expMestCode = 23;
+  int64 mediStockId = 24;
+  int64 expMestSttId = 25;
+  double impPrice = 26;
+  double impVatRatio = 27;
+  int64 bidId = 28;
+  string packageNumber = 29;
+  int64 expiredDate = 30;
+  int64 medicineTypeId = 31;
+  string medicineTypeCode = 32;
+  string medicineTypeName = 33;
+  int64 impTime = 34;
+  int64 supplierId = 35;
+  string medicineBytNumOrder = 36;
+  string medicineRegisterNumber = 37;
+  string activeIngrBhytCode = 38;
+  string activeIngrBhytName = 39;
+  string concentra = 40;
+  string tdlBidGroupCode = 41;
+  string tdlBidPackageCode = 42;
+  int64 serviceId = 43;
+  string nationalName = 44;
+  int64 manufacturerId = 45;
+  string bytNumOrder = 46;
+  string registerNumber = 47;
+  int64 medicineGroupId = 48;
+  int64 serviceUnitId = 49;
+  string serviceUnitCode = 50;
+  string serviceUnitName = 51;
+  int64 medicineNumOrder = 52;
+  string supplierCode = 53;
+  string supplierName = 54;
+  string bidNumber = 55;
+  string bidName = 56;
+  string medicineUseFormCode = 57;
+  string medicineUseFormName = 58;
+  int64 medicineUseFormNumOrder = 59;
+  double sumInStock = 60;
+  double sumByMedicineInStock = 61;
+  double price = 62;
+  double vatRatio = 63;
+  double virPrice = 64;
+  double taxRatio = 65;
+  int64 numOrder = 66;
+  double presAmount = 67;
+  int64 patientTypeId = 68;
+  string patientTypeCode = 69;
+  string patientTypeName = 70;
+  int64 tdlPatientId = 71;
+  int64 tdlTreatmentId = 72;
+  int64 tdlServiceReqId = 73;
+  int64 useTimeTo = 74;
+  string tutorial = 75;
+  int64 tdlIntructionTime = 76;
+  int64 tdlIntructionDate = 77;
+  string htuText = 78;
+  string morning = 79;
+  string evening = 80;
+  int64 expMestTypeId = 81;
+  int64 tdlAggrExpMestId = 82;
+  int64 aggrExpMestId = 83;
+  int64 reqRoomId = 84;
+  int64 reqDepartmentId = 85;
+  string reqUserTitle = 86;
+  string reqLoginname = 87;
+  string reqUsername = 88;
+  int64 medicineUseFormId = 89;
+  int64 medicineLineId = 90;
+  string medicineGroupCode = 91;
+  string medicineGroupName = 92;
+  int64 medicineGroupNumOrder = 93;
+  string manufacturerCode = 94;
+  string manufacturerName = 95;
+  string mediStockCode = 96;
+  string mediStockName = 97;
+  string afternoon = 98;
+  int32 afternoonIsUsed = 99;
+  double bcsReqAmount = 100;
+  double bkAmount = 101;
+  string breathSpeed = 102;
+  string breathTime = 103;
+  int64 ckImpMestMedicineIdBk = 104;
+  double convertRatio = 105;
+  string convertUnitCode = 106;
+  string convertUnitName = 107;
+  int64 dayCount = 108;
+  string description = 109;
+  double discount = 110;
+  int32 eveningIsUsed = 111;
+  string exceedLimitInDayReason = 112;
+  string exceedLimitInPresReason = 113;
+  string exceedLimitInTreatReason = 114;
+  int64 expendTypeId = 115;
+  int64 expMestIdBk = 116;
+  int64 expMestMetyReqIdBk = 117;
+  string groupCode = 118;
+  int64 htuId = 119;
+  string htuIds = 120;
+  string htuName = 121;
+  double internalPrice = 122;
+  int32 isAllowOdd = 123;
+  int32 isCreatedByApproval = 124;
+  int32 isExpend = 125;
+  int32 isFunctionalFood = 126;
+  int32 isMixedMain = 127;
+  int32 isNotPres = 128;
+  int32 isOutHospital = 129;
+  int32 isOutParentFee = 130;
+  int32 isRation = 131;
+  int32 isUsed = 132;
+  int32 isUseClientPrice = 133;
+  int64 medicineIdBk = 134;
+  string medicineTcyNumOrder = 135;
+  int64 medicineTypeNumOrder = 136;
+  int64 mediStockPeriodId = 137;
+  int64 memaGroupId = 138;
+  int32 mixedInfusion = 139;
+  int32 morningIsUsed = 140;
+  string noon = 141;
+  int32 noonIsUsed = 142;
+  string oddPresReason = 143;
+  string otherPaySourceCode = 144;
+  int64 otherPaySourceId = 145;
+  string otherPaySourceName = 146;
+  string overKidneyReason = 147;
+  string overResultTestReason = 148;
+  int64 previousUsingCount = 149;
+  string recordingTransaction = 150;
+  int64 sereServParentId = 151;
+  int64 serviceConditionId = 152;
+  double speed = 153;
+  string storageConditionCode = 154;
+  int64 storageConditionId = 155;
+  string storageConditionName = 156;
+  string tcyNumOrder = 157;
+  int64 tdlKidneyServiceReqId = 158;
+  int64 tdlMedicineTypeIdBk = 159;
+  int64 tdlMediStockIdBk = 160;
+  string tdlPresReqUserTitle = 161;
+  int64 tdlVaccinationId = 162;
+  double thAmount = 163;
+  string tutorialInfusion = 164;
+  int64 usedTime = 165;
+  int32 useOriginalUnitForPres = 166;
+  int64 vaccinationResultId = 167;
+  int64 vaccineTurn = 168;
+  string createdAt = 169;
+  string updatedAt = 170;
+  string createdBy = 171;
+  string updatedBy = 172;
+  int32 version = 173;
+  int32 isActive = 174;
+  int64 inpatientExpMestId = 175;
+}
+
+message SyncAllInpatientExpMestResponse {
+  InpatientExpMest parent = 1;
+  repeated InpatientExpMestChild children = 2;
+  repeated InpatientExpMestMedicine medicines = 3;
+}
+
+message InpatientExpMestChildList {
+  repeated InpatientExpMestChild data = 1;
+}
+
+message InpatientExpMestMedicineList {
+  repeated InpatientExpMestMedicine data = 1;
+}
+
+message FindInpatientExpMestChildrenByAggrExpMestIdInput {
+  int64 aggrExpMestId = 1;
+}
+
+message FindInpatientExpMestsByHisIdsInput {
+  repeated int64 hisExpMestIds = 1;
+}
+
+message FindInpatientExpMestMedicinesByInpatientExpMestIdInput {
+  int64 inpatientExpMestId = 1;
+}
+
+message FindInpatientExpMestChildByHisIdInput {
+  int64 hisExpMestId = 1;
+}
+
+message FindInpatientExpMestMedicineByHisIdInput {
+  int64 hisId = 1;
+}
+
+message UpdateExportFieldsByHisIdsInput {
+  repeated int64 hisIds = 1;
+  int64 exportTime = 2;
+  string userId = 3;
+}
+
+message UpdateExportFieldsByHisIdsOutput {
+  int32 updatedCount = 1;
+  repeated int64 hisIds = 2;
+}
+
+message UpdateActualExportFieldsByHisIdsInput {
+  repeated int64 hisIds = 1;
+  int64 actualExportTime = 2;
+  string userId = 3;
+}
+
+message UpdateActualExportFieldsByHisIdsOutput {
+  int32 updatedCount = 1;
+  repeated int64 hisIds = 2;
+}

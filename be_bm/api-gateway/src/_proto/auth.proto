@@ -9,6 +9,14 @@ message UserInfo {
   string username = 2;
   string email = 3;
   int64 acsId = 4;
+  repeated string roles = 5;
+}
+
+message ExternalToken {
+  string tokenCode = 1;
+  string renewCode = 2;
+  string expireTime = 3;
+  string loginTime = 4;
 }
 
 message LoginRequest {
@@ -24,6 +32,7 @@ message LoginResponse {
   string refreshToken = 2;
   int64 expiresIn = 3; // seconds
   UserInfo user = 4;
+  ExternalToken externalToken = 5; // optional - token from external system (HIS)
 }
 
 message RefreshTokenRequest {
@@ -34,6 +43,8 @@ message RefreshTokenResponse {
   string accessToken = 1;
   string refreshToken = 2;
   int64 expiresIn = 3;
+  UserInfo user = 4;
+  ExternalToken externalToken = 5;
 }
 
 message LogoutRequest {
@@ -48,6 +59,32 @@ message ValidateTokenResponse {
   bool isValid = 1;
   string userId = 2;
   int64 expiresAt = 3;
+  string employeeCode = 4;
+  repeated string roles = 5;
+}
+
+message RenewExternalTokenRequest {
+  string renewCode = 1; // Optional: if not provided, will get from Redis using userId
+  string userId = 2; // Required: user ID from JWT token
+}
+
+message RenewExternalTokenResponse {
+  ExternalToken externalToken = 1;
+}
+
+message ChangePasswordRequest {
+  string userId = 1;
+  string username = 2;
+  string oldPassword = 3;
+  string newPassword = 4;
+  string deviceId = 5;
+  string ipAddress = 6;
+  string userAgent = 7;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 service AuthService {
@@ -56,5 +93,6 @@ service AuthService {
   rpc refreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {}
   rpc validateToken (ValidateTokenRequest) returns (ValidateTokenResponse) {}
   rpc revokeToken (LogoutRequest) returns (commons.Count) {}
+  rpc renewExternalToken (RenewExternalTokenRequest) returns (RenewExternalTokenResponse) {}
+  rpc changePassword (ChangePasswordRequest) returns (ChangePasswordResponse) {}
 }
-

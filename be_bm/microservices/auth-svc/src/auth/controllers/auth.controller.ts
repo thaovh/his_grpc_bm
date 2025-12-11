@@ -6,6 +6,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LogoutDto } from '../dto/logout.dto';
 import { Count } from '../../commons/interfaces/commons.interface';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @Controller()
 export class AuthController {
@@ -20,8 +21,31 @@ export class AuthController {
   async login(data: LoginDto) {
     this.logger.info('AuthController#login.call', { username: data.username });
     const result = await this.authService.login(data);
-    this.logger.info('AuthController#login.result', { userId: result.user.id });
-    return result;
+    
+    // Đảm bảo externalToken được set đúng cách cho gRPC serialization
+    // Tạo một object mới với tất cả fields để đảm bảo gRPC serialize đúng
+    const response: any = {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      expiresIn: result.expiresIn,
+      user: result.user,
+    };
+    
+    // Nếu có externalToken, thêm vào response với tất cả fields
+    if (result.externalToken) {
+      response.externalToken = {
+        tokenCode: result.externalToken.tokenCode || '',
+        renewCode: result.externalToken.renewCode || '',
+        expireTime: result.externalToken.expireTime || '',
+        loginTime: result.externalToken.loginTime || '',
+      };
+      this.logger.info('AuthController#login.result.externalToken', {
+        tokenCode: result.externalToken.tokenCode?.substring(0, 20) + '...',
+        renewCode: result.externalToken.renewCode?.substring(0, 20) + '...',
+      });
+    }
+    
+    return response;
   }
 
   @GrpcMethod('AuthService', 'logout')
@@ -54,6 +78,43 @@ export class AuthController {
     const count = await this.authService.revokeToken(data);
     this.logger.info('AuthController#revokeToken.result', { count });
     return { count };
+  }
+
+  @GrpcMethod('AuthService', 'renewExternalToken')
+  async renewExternalToken(data: { renewCode?: string; userId?: string }) {
+    this.logger.info('AuthController#renewExternalToken.call', { 
+      userId: data.userId,
+      hasRenewCode: !!data.renewCode,
+    });
+    
+    if (!data.userId) {
+      throw new Error('UserId is required');
+    }
+
+    const result = await this.authService.renewExternalToken(data.userId, data.renewCode);
+    
+    this.logger.info('AuthController#renewExternalToken.result', {
+      userId: data.userId,
+      hasTokenCode: !!result.tokenCode,
+    });
+
+    return {
+      externalToken: {
+        tokenCode: result.tokenCode || '',
+        renewCode: result.renewCode || '',
+        expireTime: result.expireTime || '',
+        loginTime: result.loginTime || '',
+      },
+    };
+  }
+
+  @GrpcMethod('AuthService', 'changePassword')
+  async changePassword(data: ChangePasswordDto) {
+    this.logger.info('AuthController#changePassword.call', {
+      userId: data.userId,
+      hasDeviceId: !!data.deviceId,
+    });
+    return this.authService.changePassword(data);
   }
 }
 

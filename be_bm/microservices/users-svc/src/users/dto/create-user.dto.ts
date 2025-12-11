@@ -4,7 +4,8 @@ export class CreateUserDto {
   readonly email: string;
   readonly password: string; // Will be hashed before saving
   readonly acsId?: number | null;
-  
+  readonly attendanceId?: string;
+
   // Profile fields (optional on create)
   readonly firstName?: string;
   readonly lastName?: string;

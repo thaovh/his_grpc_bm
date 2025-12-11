@@ -10,12 +10,27 @@ interface UsersGrpcService {
   findByUsername(data: { name: string }): any;
   findByEmail(data: { name: string }): any;
   findByAcsId(data: { id: string }): any;
-  findByIdWithProfile(data: { id: string }): any;
+  getUserInfoWithProfile(data: { id: string }): any;
   count(data: any): any;
   create(data: any): any;
   update(data: any): any;
   updateProfile(data: any): any;
   destroy(data: { id: string }): any;
+  // Role Management
+  CreateRole(data: any): any;
+  UpdateRole(data: any): any;
+  DeleteRole(data: { id: string }): any;
+  GetRoles(data: any): any;
+  GetRoleById(data: { id: string }): any;
+  GetRoleByCode(data: { name: string }): any;
+  // User Role Assignment
+  AssignRole(data: { userId: string; roleCode: string }): any;
+  RevokeRole(data: { userId: string; roleCode: string }): any;
+  GetUserRoles(data: { id: string }): any;
+  // Device Token Management
+  SaveDeviceToken(data: any): any;
+  RemoveDeviceToken(data: { deviceToken: string }): any;
+  GetDeviceTokens(data: { employeeCode: string }): any;
 }
 
 @Injectable()
@@ -82,12 +97,10 @@ export class UsersService implements OnModuleInit {
 
   async findByIdWithProfile(id: string) {
     this.logger.info('UsersService#findByIdWithProfile.call', { id });
-    const result = await firstValueFrom(this.usersGrpcService.findByIdWithProfile({ id })) as any;
+    const result = await firstValueFrom(this.usersGrpcService.getUserInfoWithProfile({ id })) as any;
     this.logger.info('UsersService#findByIdWithProfile.result', result);
-    // Convert Long objects to numbers for Oracle compatibility
-    if (result.user) {
-      this.convertLongToNumber(result.user);
-    }
+    // Convert Long objects to numbers recursively
+    this.convertLongToNumber(result);
     return result;
   }
 
@@ -130,19 +143,113 @@ export class UsersService implements OnModuleInit {
     return result;
   }
 
+  // Role Management
+  async createRole(data: any) {
+    this.logger.info('UsersService#createRole.call', { code: data.code });
+    const result = await firstValueFrom(this.usersGrpcService.CreateRole(data)) as any;
+    return result;
+  }
+
+  async updateRole(data: any) {
+    this.logger.info('UsersService#updateRole.call', { id: data.id });
+    const result = await firstValueFrom(this.usersGrpcService.UpdateRole(data)) as any;
+    return result;
+  }
+
+  async deleteRole(id: string) {
+    this.logger.info('UsersService#deleteRole.call', { id });
+    const result = await firstValueFrom(this.usersGrpcService.DeleteRole({ id })) as any;
+    return result;
+  }
+
+  async getRoles(query?: any) {
+    this.logger.info('UsersService#getRoles.call', query);
+    const result = await firstValueFrom(this.usersGrpcService.GetRoles(query || {})) as any;
+    return result;
+  }
+
+  async getRoleById(id: string) {
+    this.logger.info('UsersService#getRoleById.call', { id });
+    const result = await firstValueFrom(this.usersGrpcService.GetRoleById({ id })) as any;
+    return result;
+  }
+
+  async getRoleByCode(code: string) {
+    this.logger.info('UsersService#getRoleByCode.call', { code });
+    const result = await firstValueFrom(this.usersGrpcService.GetRoleByCode({ name: code })) as any;
+    return result;
+  }
+
+  async assignRole(userId: string, roleCode: string) {
+    this.logger.info('UsersService#assignRole.call', { userId, roleCode });
+    const result = await firstValueFrom(this.usersGrpcService.AssignRole({ userId, roleCode })) as any;
+    return result;
+  }
+
+  async revokeRole(userId: string, roleCode: string) {
+    this.logger.info('UsersService#revokeRole.call', { userId, roleCode });
+    const result = await firstValueFrom(this.usersGrpcService.RevokeRole({ userId, roleCode })) as any;
+    return result;
+  }
+
+  async getUserRoles(userId: string) {
+    this.logger.info('UsersService#getUserRoles.call', { userId });
+    const result = await firstValueFrom(this.usersGrpcService.GetUserRoles({ id: userId })) as any;
+    return result;
+  }
+
   /**
-   * Convert Long objects to numbers for Oracle compatibility
-   * gRPC serializes NUMBER(19,0) as Long object {low, high, unsigned}
-   * This method converts it back to number
+   * Convert Long objects to numbers recursively
+   * gRPC serializes int64/Long as object {low, high, unsigned}
+   * This method converts them back to JavaScript numbers
    */
-  private convertLongToNumber(user: any): void {
-    if (user && user.acsId !== null && user.acsId !== undefined) {
-      const acsIdValue: number | { low: number; high: number } | null = user.acsId as any;
-      if (acsIdValue !== null && typeof acsIdValue === 'object' && 'low' in acsIdValue && 'high' in acsIdValue) {
-        const longValue = acsIdValue as { low: number; high: number };
-        user.acsId = longValue.low + (longValue.high * 0x100000000);
+  private convertLongToNumber(obj: any): void {
+    if (!obj || typeof obj !== 'object') return;
+
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+
+        // Check if value is a Long object { low, high, unsigned }
+        if (value && typeof value === 'object' && 'low' in value && 'high' in value) {
+          obj[key] = value.low + (value.high * 0x100000000);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Recursive call for nested objects (but excluding arrays for safety/perf unless needed)
+          // Profile is flat so recursion might not be strictly needed, but good for safety
+          this.convertLongToNumber(value);
+        }
       }
     }
+  }
+
+  // Device Token Management
+  async saveDeviceToken(data: {
+    userId: string;
+    employeeCode: string;
+    deviceToken: string;
+    deviceType?: string;
+    deviceName?: string;
+    deviceOsVersion?: string;
+    appVersion?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    this.logger.info('UsersService#saveDeviceToken.call', { userId: data.userId });
+    const result = await firstValueFrom(this.usersGrpcService.SaveDeviceToken(data)) as any;
+    this.logger.info('UsersService#saveDeviceToken.result', result);
+    return result;
+  }
+
+  async removeDeviceToken(deviceToken: string): Promise<{ success: boolean; message: string }> {
+    this.logger.info('UsersService#removeDeviceToken.call');
+    const result = await firstValueFrom(this.usersGrpcService.RemoveDeviceToken({ deviceToken })) as any;
+    this.logger.info('UsersService#removeDeviceToken.result', result);
+    return result;
+  }
+
+  async getDeviceTokens(employeeCode: string): Promise<{ tokens: string[] }> {
+    this.logger.info('UsersService#getDeviceTokens.call', { employeeCode });
+    const result = await firstValueFrom(this.usersGrpcService.GetDeviceTokens({ employeeCode })) as any;
+    this.logger.info('UsersService#getDeviceTokens.result', result);
+    return result;
   }
 }
 

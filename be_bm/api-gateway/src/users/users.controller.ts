@@ -9,10 +9,12 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { PinoLogger } from 'nestjs-pino';
 import { Public } from '../common/decorators/public.decorator';
+import { Resource } from '../common/decorators/resource.decorator';
 
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,6 +23,7 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserResponseDto, UserProfileResponseDto } from './dto/user-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResponseDto } from '../common/dto/pagination-response.dto';
+import { SaveDeviceTokenDto, DeviceTokenResponseDto, DeviceTokensResponseDto } from './dto/device-token.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -33,6 +36,7 @@ export class UsersController {
   }
 
   @Get()
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users', type: [UserResponseDto] })
@@ -86,6 +90,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -96,6 +101,7 @@ export class UsersController {
   }
 
   @Get('username/:username')
+  @Resource('users')
   @ApiOperation({ summary: 'Get user by username' })
   @ApiParam({ name: 'username', description: 'Username' })
   @ApiResponse({ status: 200, description: 'User details', type: UserResponseDto })
@@ -105,6 +111,7 @@ export class UsersController {
   }
 
   @Get('email/:email')
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user by email' })
   @ApiParam({ name: 'email', description: 'Email address' })
@@ -115,6 +122,7 @@ export class UsersController {
   }
 
   @Get('acs-id/:acsId')
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user by ACS ID' })
   @ApiParam({ name: 'acsId', description: 'ACS System ID', type: Number })
@@ -125,6 +133,7 @@ export class UsersController {
   }
 
   @Get(':id/profile')
+  @Resource('users.profile')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user with profile' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -136,6 +145,7 @@ export class UsersController {
 
   @Public()
   @Post()
+  @Resource('users')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created', type: UserResponseDto })
   @HttpCode(HttpStatus.CREATED)
@@ -145,6 +155,7 @@ export class UsersController {
   }
 
   @Put(':id')
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update user' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -158,6 +169,7 @@ export class UsersController {
   }
 
   @Put(':id/profile')
+  @Resource('users.profile')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update user profile' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -171,6 +183,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @Resource('users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete user' })
   @ApiParam({ name: 'id', description: 'User ID' })
@@ -180,6 +193,67 @@ export class UsersController {
     this.logger.info('UsersController#delete.call', { id });
     await this.usersService.delete(id);
     return { message: 'User deleted successfully' };
+  }
+
+  // Device Token Management Endpoints
+  @Post('device-tokens')
+  @Resource('users.device-tokens')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Register device token for push notifications' })
+  @ApiBody({ type: SaveDeviceTokenDto })
+  @ApiResponse({ status: 201, description: 'Device token registered successfully', type: DeviceTokenResponseDto })
+  @HttpCode(HttpStatus.CREATED)
+  async saveDeviceToken(
+    @Body() dto: SaveDeviceTokenDto,
+    @Req() req: any,
+  ): Promise<DeviceTokenResponseDto> {
+    this.logger.info('UsersController#saveDeviceToken.call', { userId: req.user?.id });
+
+    const userId = req.user?.id;
+    const employeeCode = req.user?.employeeCode || req.user?.profile?.employeeCode;
+
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    return this.usersService.saveDeviceToken({
+      userId,
+      employeeCode,
+      deviceToken: dto.deviceToken,
+      deviceType: dto.deviceType,
+      deviceName: dto.deviceName,
+      deviceOsVersion: dto.deviceOsVersion,
+      appVersion: dto.appVersion,
+    });
+  }
+
+  @Delete('device-tokens/:token')
+  @Resource('users.device-tokens')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Unregister device token' })
+  @ApiParam({ name: 'token', description: 'Device token to remove' })
+  @ApiResponse({ status: 200, description: 'Device token removed successfully', type: DeviceTokenResponseDto })
+  @HttpCode(HttpStatus.OK)
+  async removeDeviceToken(@Param('token') token: string): Promise<DeviceTokenResponseDto> {
+    this.logger.info('UsersController#removeDeviceToken.call');
+    return this.usersService.removeDeviceToken(token);
+  }
+
+  @Get('device-tokens')
+  @Resource('users.device-tokens')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get my device tokens' })
+  @ApiResponse({ status: 200, description: 'List of device tokens', type: DeviceTokensResponseDto })
+  async getMyDeviceTokens(@Req() req: any): Promise<DeviceTokensResponseDto> {
+    this.logger.info('UsersController#getMyDeviceTokens.call');
+
+    const employeeCode = req.user?.employeeCode || req.user?.profile?.employeeCode;
+
+    if (!employeeCode) {
+      throw new Error('Employee code not found');
+    }
+
+    return this.usersService.getDeviceTokens(employeeCode);
   }
 }
 

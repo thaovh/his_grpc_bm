@@ -60,6 +60,9 @@
 - ✅ Improved error messages
 - ✅ Added pagination metadata (hasPrevious, hasNext)
 - ✅ Added global API prefix `/api`
+- ✅ Enhanced error handling with gRPC-to-HTTP mapping and Vietnamese localization
+- ✅ Improved machine search with Mongo-like operator support
+- ✅ Included machine documents in API responses
 
 ### 8. Configuration Management
 - ✅ Created `app.config.ts` with `registerAs`
@@ -125,6 +128,8 @@
 - Add API documentation examples
 - Document CQRS usage
 - Document nested objects usage
+- ✅ Enhanced error handling and localization documented
+- ✅ Machine search improvements documented
 
 ## 📝 Next Steps
 

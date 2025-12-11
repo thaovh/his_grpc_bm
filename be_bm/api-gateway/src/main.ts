@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { DynamicRolesGuard } from './common/guards/dynamic-roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -43,6 +44,9 @@ async function bootstrap() {
     app.get(LoggingInterceptor),
   );
 
+  // Global guards for dynamic authorization
+  app.useGlobalGuards(app.get(DynamicRolesGuard));
+
   // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Microservices API')
@@ -61,6 +65,8 @@ async function bootstrap() {
     )
     .addTag('users')
     .addTag('auth')
+    .addTag('inventory')
+    .addTag('master-data')
     .addTag('health')
     .build();
   const document = SwaggerModule.createDocument(app, config);

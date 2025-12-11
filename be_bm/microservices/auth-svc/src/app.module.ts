@@ -13,19 +13,49 @@ import { AuthModule } from './auth/auth.module';
     LoggerModule.forRoot({
       pinoHttp: {
         safe: true,
-        ...(process.env.NODE_ENV === 'development' && {
-          transport: {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
+        transport: {
+          targets: [
+            {
+              target: 'pino-pretty',
+              options: {
+                singleLine: true,
+                colorize: true,
+                translateTime: 'SYS:standard',
+              },
             },
-          },
-        }),
-      },
+            {
+              target: 'pino-roll',
+              level: 'error',
+              options: {
+                file: './logs/auth-svc-error.log',
+                frequency: 'daily',
+                mkdir: true,
+                dateFormat: 'yyyy-MM-dd',
+                limit: {
+                  count: 14,
+                },
+              },
+            },
+            {
+              target: 'pino-roll',
+              level: 'info',
+              options: {
+                file: './logs/auth-svc-combined.log',
+                frequency: 'daily',
+                mkdir: true,
+                dateFormat: 'yyyy-MM-dd',
+                limit: {
+                  count: 14,
+                },
+              },
+            },
+          ],
+        },
+      } as any,
     }),
     DatabaseModule,
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
 

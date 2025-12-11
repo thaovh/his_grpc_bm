@@ -4,6 +4,7 @@ import { Transport } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
+import { GlobalRpcExceptionFilter } from './commons/filters/rpc-exception.filter';
 import { UsersSeeder } from './users/users.seeder';
 
 async function bootstrap() {
@@ -17,11 +18,17 @@ async function bootstrap() {
         enums: String,
         objects: true,
         arrays: true,
+        keepCase: true, // Keep field names as in proto (FindByIdWithProfile, not findByIdWithProfile)
+        defaults: true, // Include default values
+        oneofs: true,
+        include: [join(__dirname, './_proto')],
       },
     },
   });
 
-  app.useLogger(app.get(Logger));
+  const pinoLogger = app.get(Logger);
+  app.useLogger(pinoLogger);
+  app.useGlobalFilters(new GlobalRpcExceptionFilter(pinoLogger));
 
   // TODO: Fix QueryHandler registration issue
   // Temporarily comment out seeder to allow service to start

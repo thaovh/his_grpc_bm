@@ -1,0 +1,49 @@
+export class UpdateInpatientExpMestDto {
+  readonly expMestCode?: string | null;
+  readonly expMestTypeId?: number | null;
+  readonly expMestSttId?: number | null;
+  readonly mediStockId?: number | null;
+  readonly reqLoginname?: string | null;
+  readonly reqUsername?: string | null;
+  readonly reqRoomId?: number | null;
+  readonly reqDepartmentId?: number | null;
+  readonly createDate?: number | null;
+  readonly tdlPatientTypeId?: number | null;
+  readonly virCreateMonth?: number | null;
+  readonly virCreateYear?: number | null;
+  readonly reqUserTitle?: string | null;
+  readonly expMestSubCode?: string | null;
+  readonly expMestSubCode2?: string | null;
+  readonly numOrder?: number | null;
+  readonly tdlAggrPatientCode?: string | null;
+  readonly tdlAggrTreatmentCode?: string | null;
+  readonly expMestTypeCode?: string | null;
+  readonly expMestTypeName?: string | null;
+  readonly expMestSttCode?: string | null;
+  readonly expMestSttName?: string | null;
+  readonly mediStockCode?: string | null;
+  readonly mediStockName?: string | null;
+  readonly reqDepartmentCode?: string | null;
+  readonly reqDepartmentName?: string | null;
+  readonly tdlIntructionDateMin?: number | null;
+  readonly lastExpLoginname?: string | null;
+  readonly lastExpUsername?: string | null;
+  readonly lastExpTime?: number | null;
+  readonly finishTime?: number | null;
+  readonly finishDate?: number | null;
+  readonly isExportEqualApprove?: number | null;
+  readonly lastApprovalLoginname?: string | null;
+  readonly lastApprovalUsername?: string | null;
+  readonly lastApprovalTime?: number | null;
+  readonly lastApprovalDate?: number | null;
+  readonly reqRoomCode?: string | null;
+  readonly reqRoomName?: string | null;
+  readonly groupCode?: string | null;
+  readonly workingStateId?: string | null; // Reference to MST_EXPORT_STATUS.id
+  readonly hisCreateTime?: number | null;
+  readonly hisModifyTime?: number | null;
+  readonly hisCreator?: string | null;
+  readonly hisModifier?: string | null;
+  readonly updatedBy: string;
+}
+

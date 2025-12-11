@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package attendance;
+
+import "commons.proto";
+
+// Messages
+message DeviceInfo {
+  string id = 1;
+  string name = 2;
+  string ip = 3;
+  int32 port = 4;
+  int32 isActive = 5;
+}
+
+message AttendanceRecord {
+  string id = 1;
+  string employeeCode = 2;
+  string deviceId = 3;
+  string eventType = 4;
+  string eventTimestamp = 5;
+  string imageUrl = 6;
+  int32 verified = 7;
+  string rawData = 8;
+  string createdAt = 9;
+  string updatedAt = 10;
+  // Nested device info
+  DeviceInfo device = 11;
+}
+
+message AttendanceQuery {
+  string employeeCode = 1;
+  string deviceId = 2;
+  string startDate = 3;
+  string endDate = 4;
+  int32 page = 5;
+  int32 limit = 6;
+}
+
+message AttendanceList {
+  repeated AttendanceRecord records = 1;
+  int32 total = 2;
+}
+
+// Service
+service AttendanceService {
+  rpc FindAll(AttendanceQuery) returns (AttendanceList);
+  rpc FindById(commons.Id) returns (AttendanceRecord);
+  rpc Count(AttendanceQuery) returns (commons.Count);
+}

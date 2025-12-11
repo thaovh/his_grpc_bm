@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package master_data;
+
+import "../commons.proto";
+
+// Department Type - Loại khoa
+message DepartmentType {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+  string createdBy = 6;
+  string updatedBy = 7;
+  int32 version = 8;
+  int32 isActive = 9;
+}
+
+message CreateDepartmentTypeInput {
+  string code = 1;
+  string name = 2;
+  string createdBy = 3;
+}
+
+message UpdateDepartmentTypeInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string updatedBy = 4;
+}
+
+message DepartmentTypeList {
+  repeated DepartmentType data = 1;
+}

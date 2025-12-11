@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/benjsicam/nestjs-rest-microservices#readme",
   "dependencies": {
+    "@nestjs/event-emitter": "^3.0.1",
+    "axios": "^1.13.2",
     "pino-http": "^11.0.0"
   }
 }

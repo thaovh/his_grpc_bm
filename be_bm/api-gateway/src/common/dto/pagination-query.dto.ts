@@ -32,5 +32,10 @@ export class PaginationQueryDto {
   @IsOptional()
   @IsString()
   select?: string;
+
+  @ApiPropertyOptional({ example: '{"code": "MACHINE01"}', description: 'JSON string for complex filters' })
+  @IsOptional()
+  @IsString()
+  where?: string;
 }
 

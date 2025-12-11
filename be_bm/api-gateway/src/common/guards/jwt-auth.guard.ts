@@ -43,7 +43,11 @@ export class JwtAuthGuard implements CanActivate {
 
       if (result.isValid) {
         // Attach user info to request
-        request.user = { id: result.userId };
+        request.user = {
+          id: result.userId,
+          employeeCode: result.employeeCode,
+          roles: result.roles || []
+        };
         return true;
       }
 

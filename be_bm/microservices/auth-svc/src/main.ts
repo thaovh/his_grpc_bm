@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
+import { GlobalRpcExceptionFilter } from './commons/filters/rpc-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice(AppModule, {
@@ -19,7 +20,9 @@ async function bootstrap() {
     },
   });
 
-  app.useLogger(app.get(Logger));
+  const pinoLogger = app.get(Logger);
+  app.useLogger(pinoLogger);
+  app.useGlobalFilters(new GlobalRpcExceptionFilter(pinoLogger));
 
   await app.listen();
 

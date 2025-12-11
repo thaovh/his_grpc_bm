@@ -12,6 +12,7 @@ import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { CreateUserCommand } from '../commands/create-user.command';
 import { UpdateUserCommand } from '../commands/update-user.command';
 import { UpdateUserProfileCommand } from '../commands/update-user-profile.command';
+import { UpdatePasswordCommand } from '../commands/update-password.command';
 import { GetUsersQuery } from '../queries/get-users.query';
 import { GetUserByIdQuery } from '../queries/get-user-by-id.query';
 import { GetUserByUsernameQuery } from '../queries/get-user-by-username.query';
@@ -92,9 +93,71 @@ export class UsersServiceImpl implements UsersService {
     return this.commandBus.execute(new UpdateUserProfileCommand(userId, profileDto));
   }
 
+  async updatePassword(id: string, passwordHash: string): Promise<User> {
+    this.logger.info('UsersService#updatePassword.call', { id });
+    return this.commandBus.execute(new UpdatePasswordCommand(id, passwordHash));
+  }
+
   async delete(id: string): Promise<void> {
     this.logger.info('UsersService#delete.call', { id });
     await this.repository.delete(id);
+  }
+
+  // Device Token Management
+  async saveDeviceToken(request: {
+    userId: string;
+    employeeCode: string;
+    deviceToken: string;
+    deviceType?: string;
+    deviceName?: string;
+    deviceOsVersion?: string;
+    appVersion?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    this.logger.info('UsersService#saveDeviceToken.call', { userId: request.userId });
+
+    const { SaveDeviceTokenCommand } = await import('../commands/device-token.cqrs');
+    const command = new SaveDeviceTokenCommand(
+      request.userId,
+      request.employeeCode,
+      request.deviceToken,
+      request.deviceType,
+      request.deviceName,
+      request.deviceOsVersion,
+      request.appVersion,
+    );
+
+    await this.commandBus.execute(command);
+
+    return {
+      success: true,
+      message: 'Device token saved successfully',
+    };
+  }
+
+  async removeDeviceToken(request: { deviceToken: string }): Promise<{ success: boolean; message: string }> {
+    this.logger.info('UsersService#removeDeviceToken.call');
+
+    const { RemoveDeviceTokenCommand } = await import('../commands/device-token.cqrs');
+    const command = new RemoveDeviceTokenCommand(request.deviceToken);
+    await this.commandBus.execute(command);
+
+    return {
+      success: true,
+      message: 'Device token removed successfully',
+    };
+  }
+
+  async getDeviceTokens(request: { employeeCode: string }): Promise<{ tokens: string[]; deviceTokens?: string[] }> {
+    this.logger.info('UsersService#getDeviceTokens.call', { employeeCode: request.employeeCode });
+
+    const { GetDeviceTokensByEmployeeCodeQuery } = await import('../queries/device-token.cqrs');
+    const query = new GetDeviceTokensByEmployeeCodeQuery(request.employeeCode);
+    const tokens = await this.queryBus.execute(query);
+
+    this.logger.info('UsersService#getDeviceTokens.result', { employeeCode: request.employeeCode, count: tokens.length });
+
+    // Return both formats for compatibility
+    return { tokens, deviceTokens: tokens };
   }
 }
 

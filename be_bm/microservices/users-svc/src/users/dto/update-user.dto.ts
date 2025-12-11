@@ -8,5 +8,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   readonly acsId?: number | null;
+
+  @IsOptional()
+  readonly attendanceId?: string;
 }
 
