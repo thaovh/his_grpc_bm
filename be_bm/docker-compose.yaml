@@ -1,0 +1,135 @@
+version: "3"
+
+services:
+  api-gateway:
+    image: "api-gateway:dev"
+    build:
+      context: "./api-gateway"
+    networks:
+      - "frontend"
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "test"
+      PORT: "3000"
+      USERS_SVC_URL: "users-svc"
+      USERS_SVC_PORT: "50051"
+      AUTH_SVC_URL: "auth-svc"
+      AUTH_SVC_PORT: "50052"
+    depends_on:
+      - users-svc
+      - auth-svc
+    healthcheck:
+      test: ["CMD", "wget", "localhost:3000/healthz -q -O - > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: "on-failure"
+
+  users-svc:
+    image: "users-svc:dev"
+    build:
+      context: "./microservices/users-svc"
+    networks:
+      - "frontend"
+      - "backend"
+    ports:
+      - "50051:50051"
+    environment:
+      NODE_ENV: "test"
+      URL: "0.0.0.0"
+      PORT: "50051"
+      DB_HOST: "192.168.7.248"
+      DB_PORT: "1521"
+      DB_USER: "HXT_RS"
+      DB_PASSWORD: "HXT_RS"
+      DB_NAME: "orclstb"
+      DB_SID: ""
+      DB_SERVICE_NAME: "orclstb"
+      DB_CONNECT_STRING: "192.168.7.248:1521/orclstb"
+    # Removed depends_on: users-db vì giờ dùng database bên ngoài
+    healthcheck:
+      test: ["CMD", "wget", "localhost:50051 -q -O - > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: "on-failure"
+
+  auth-svc:
+    image: "auth-svc:dev"
+    build:
+      context: "./microservices/auth-svc"
+    networks:
+      - "frontend"
+      - "backend"
+    ports:
+      - "50052:50052"
+    environment:
+      NODE_ENV: "test"
+      URL: "0.0.0.0"
+      PORT: "50052"
+      DB_HOST: "192.168.7.248"
+      DB_PORT: "1521"
+      DB_USER: "HXT_RS"
+      DB_PASSWORD: "HXT_RS"
+      DB_NAME: "orclstb"
+      DB_SID: ""
+      DB_SERVICE_NAME: "orclstb"
+      DB_CONNECT_STRING: "192.168.7.248:1521/orclstb"
+      DB_SYNCHRONIZE: "true"
+      JWT_SECRET: "your-secret-key-change-in-production-min-32-chars"
+      JWT_EXPIRES_IN: "15m"
+      REFRESH_TOKEN_EXPIRES_IN: "7d"
+      USERS_SVC_URL: "users-svc"
+      USERS_SVC_PORT: "50051"
+    depends_on:
+      - users-svc
+    healthcheck:
+      test: ["CMD", "wget", "localhost:50052 -q -O - > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: "on-failure"
+
+  # users-db service đã được comment vì giờ dùng Oracle database bên ngoài
+  # Nếu cần dùng local database, uncomment service này
+  # users-db:
+  #   image: "gvenzl/oracle-xe:21-slim"
+  #   networks:
+  #     - "backend"
+  #   ports:
+  #     - "1521:1521"
+  #   environment:
+  #     ORACLE_PASSWORD: "t123456"
+  #     ORACLE_DATABASE: "XEPDB1"
+  #   volumes:
+  #     - "users-db-data:/opt/oracle/oradata"
+  #   healthcheck:
+  #     test: ["CMD", "sqlplus", "-S", "SYSTEM/t123456@localhost:1521/XEPDB1", "@/dev/null"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   restart: "on-failure"
+
+  swagger-ui:
+    image: "swaggerapi/swagger-ui:v3.25.0"
+    networks:
+      - "frontend"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./docs/openapi-spec.yaml:/usr/share/spec/openapi-spec.yaml"
+    environment:
+      SWAGGER_JSON: "/usr/share/spec/openapi-spec.yaml"
+    healthcheck:
+      test: ["CMD", "wget", "localhost:8080 -q -O - > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  frontend:
+  backend:
+
+# volumes:
+#   users-db-data volume đã được comment vì không dùng local database nữa
