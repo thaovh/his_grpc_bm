@@ -33,7 +33,15 @@ export class AuthService implements OnModuleInit {
   async login(data: LoginRequest): Promise<LoginResponse> {
     this.logger.info('AuthService#login.call', { username: data.username });
     const result = await firstValueFrom(this.authGrpcService.login(data)) as any;
-    this.logger.info('AuthService#login.result', { userId: result.user?.id });
+    
+    // Log chi tiết
+    if (result.externalToken) {
+      this.logger.info('AuthService#login.result.externalToken', {
+        tokenCode: result.externalToken.tokenCode?.substring(0, 20) + '...',
+        renewCode: result.externalToken.renewCode?.substring(0, 20) + '...',
+      });
+    }
+    
     // Convert Long objects to numbers
     this.convertLongToNumber(result.user);
     this.convertLongToNumber(result, 'expiresIn');
@@ -70,6 +78,54 @@ export class AuthService implements OnModuleInit {
     const result = await firstValueFrom(this.authGrpcService.revokeToken(data)) as any;
     this.logger.info('AuthService#revokeToken.result', result);
     return result;
+  }
+
+  async renewExternalToken(userId: string, renewCode?: string): Promise<{
+    tokenCode: string;
+    renewCode: string;
+    expireTime: string;
+    loginTime: string;
+  }> {
+    this.logger.info('AuthService#renewExternalToken.call', { userId, hasRenewCode: !!renewCode });
+    
+    try {
+      const result = await firstValueFrom(
+        this.authGrpcService.renewExternalToken({ userId, renewCode })
+      ) as any;
+      
+      this.logger.info('AuthService#renewExternalToken.gRPCResult', {
+        userId,
+        hasResult: !!result,
+        hasExternalToken: !!result?.externalToken,
+        resultKeys: result ? Object.keys(result) : [],
+      });
+      
+      if (!result || !result.externalToken) {
+        this.logger.error('AuthService#renewExternalToken.invalidResult', {
+          userId,
+          result: JSON.stringify(result).substring(0, 500),
+        });
+        throw new Error('Failed to renew external token: Invalid response from auth service');
+      }
+
+      this.logger.info('AuthService#renewExternalToken.result', {
+        userId,
+        hasTokenCode: !!result.externalToken.tokenCode,
+        hasRenewCode: !!result.externalToken.renewCode,
+      });
+
+      return result.externalToken;
+    } catch (error: any) {
+      this.logger.error('AuthService#renewExternalToken.error', {
+        userId,
+        error: error.message,
+        errorType: error.constructor?.name,
+        code: error.code,
+        details: error.details,
+        stack: error.stack?.substring(0, 500),
+      });
+      throw error;
+    }
   }
 
   /**

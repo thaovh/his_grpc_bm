@@ -16,9 +16,12 @@ services:
       USERS_SVC_PORT: "50051"
       AUTH_SVC_URL: "auth-svc"
       AUTH_SVC_PORT: "50052"
+      INTEGRATION_SVC_URL: "integration-svc"
+      INTEGRATION_SVC_PORT: "50053"
     depends_on:
       - users-svc
       - auth-svc
+      - integration-svc
     healthcheck:
       test: ["CMD", "wget", "localhost:3000/healthz -q -O - > /dev/null 2>&1"]
       interval: 30s
@@ -82,14 +85,67 @@ services:
       REFRESH_TOKEN_EXPIRES_IN: "7d"
       USERS_SVC_URL: "users-svc"
       USERS_SVC_PORT: "50051"
+      INTEGRATION_SVC_URL: "integration-svc"
+      INTEGRATION_SVC_PORT: "50053"
     depends_on:
       - users-svc
+      - integration-svc
     healthcheck:
       test: ["CMD", "wget", "localhost:50052 -q -O - > /dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 5
     restart: "on-failure"
+
+  integration-svc:
+    image: "integration-svc:dev"
+    build:
+      context: "./microservices/integration-svc"
+    networks:
+      - "frontend"
+      - "backend"
+    ports:
+      - "50053:50053"
+    environment:
+      NODE_ENV: "test"
+      URL: "0.0.0.0"
+      PORT: "50053"
+      EXTERNAL_AUTH_URL: "http://192.168.7.200:1401/api/Token/Login"
+      HIS_VERSION: "2.377.0"
+      HIS_MACHINE_NAME: "DESKTOP-HPQH46O"
+      REDIS_HOST: "192.168.68.209"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "t123456"
+      REDIS_DB: "0"
+      USERS_SVC_URL: "users-svc"
+      USERS_SVC_PORT: "50051"
+    depends_on:
+      - users-svc
+      # Redis đã chạy external, không cần depends_on
+    healthcheck:
+      test: ["CMD", "wget", "localhost:50053 -q -O - > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: "on-failure"
+
+  # Redis service đã được chạy external trên host 192.168.68.209:6379
+  # Với password: t123456
+  # docker run --name my-redis -p 6379:6379 -e REDIS_PASSWORD="t123456" -d redis:latest
+  # Nếu cần chạy Redis trong Docker, uncomment service bên dưới
+  # redis:
+  #   image: "redis:7-alpine"
+  #   networks:
+  #     - "backend"
+  #   ports:
+  #     - "6379:6379"
+  #   command: redis-server --requirepass t123456
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "-a", "t123456", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: "on-failure"
 
   # users-db service đã được comment vì giờ dùng Oracle database bên ngoài
   # Nếu cần dùng local database, uncomment service này

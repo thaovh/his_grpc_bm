@@ -10,10 +10,16 @@ export interface UserInfo {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number; // seconds
+  accessToken: string;        // JWT token local
+  refreshToken: string;       // JWT refresh token local
+  expiresIn: number;          // seconds
   user: UserInfo;
+  externalToken?: {           // Token từ HIS (nếu có)
+    tokenCode: string;
+    renewCode: string;
+    expireTime: string;
+    loginTime: string;
+  };
 }
 
 export interface RefreshTokenResponse {
@@ -28,11 +34,19 @@ export interface ValidateTokenResponse {
   expiresAt: number;
 }
 
+export interface RenewExternalTokenResponse {
+  tokenCode: string;
+  renewCode: string;
+  expireTime: string;
+  loginTime: string;
+}
+
 export interface AuthService {
   login(loginDto: LoginDto): Promise<LoginResponse>;
   logout(logoutDto: LogoutDto): Promise<number>;
   refreshToken(refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponse>;
   validateToken(token: string): Promise<ValidateTokenResponse>;
   revokeToken(logoutDto: LogoutDto): Promise<number>;
+  renewExternalToken(userId: string, renewCode?: string): Promise<RenewExternalTokenResponse>;
 }
 

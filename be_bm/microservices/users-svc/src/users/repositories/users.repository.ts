@@ -233,12 +233,50 @@ export class UsersRepository {
 
   async updateProfile(userId: string, data: UpdateUserProfileDto): Promise<UserProfile> {
     this.logger.info('UsersRepository#updateProfile.call', { userId, data });
-    await this.profileRepository.update({ userId }, data);
-    const profile = await this.profileRepository.findOne({ where: { userId } });
+    
+    // Check if profile exists
+    let profile = await this.profileRepository.findOne({ where: { userId } });
+    
     if (!profile) {
-      throw new Error('UserProfile not found after update');
+      // Profile doesn't exist, create new one
+      this.logger.info('UsersRepository#updateProfile.profileNotFound.creating', { userId });
+      const { randomUUID } = require('crypto');
+      const profileId = randomUUID();
+      const now = new Date();
+      
+      const profileData: any = {
+        id: profileId,
+        userId,
+        firstName: data.firstName || null,
+        lastName: data.lastName || null,
+        phone: data.phone || null,
+        avatarUrl: data.avatarUrl || null,
+        bio: data.bio || null,
+        dateOfBirth: data.dateOfBirth || null,
+        address: data.address || null,
+        isActive: 1,
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        createdBy: null,
+        updatedBy: null,
+      };
+      
+      const newProfile = this.profileRepository.create(profileData);
+      const savedProfile = await this.profileRepository.save(newProfile);
+      profile = Array.isArray(savedProfile) ? savedProfile[0] : savedProfile;
+      this.logger.info('UsersRepository#updateProfile.profileCreated', { id: profile.id });
+    } else {
+      // Profile exists, update it
+      await this.profileRepository.update({ userId }, data);
+      profile = await this.profileRepository.findOne({ where: { userId } });
+      if (!profile) {
+        throw new Error('UserProfile not found after update');
+      }
+      this.logger.info('UsersRepository#updateProfile.profileUpdated', { id: profile.id });
     }
-    this.logger.info('UsersRepository#updateProfile.result', { id: profile.id });
+    
     return profile;
   }
 

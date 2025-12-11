@@ -33,6 +33,20 @@ import { AuthRepository } from './repositories/auth.repository';
           },
         },
       },
+      {
+        name: 'INTEGRATION_PACKAGE',
+        transport: Transport.GRPC,
+        options: {
+          url: `${process.env.INTEGRATION_SVC_URL || 'localhost'}:${process.env.INTEGRATION_SVC_PORT || '50053'}`,
+          package: 'integration',
+          protoPath: join(__dirname, '../_proto/integration.proto'),
+          loader: {
+            enums: String,
+            objects: true,
+            arrays: true,
+          },
+        },
+      },
     ]),
     LoggerModule.forRoot({
       pinoHttp: {

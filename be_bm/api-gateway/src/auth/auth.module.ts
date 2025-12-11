@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UsersModule } from '../users/users.module';
 import { AuthServiceClientOptions } from './auth-svc.options';
 
 @Module({
@@ -12,6 +13,7 @@ import { AuthServiceClientOptions } from './auth-svc.options';
       name: 'AUTH_PACKAGE',
       ...AuthServiceClientOptions,
     }]),
+    UsersModule, // Import UsersModule để sử dụng UsersService
   ],
   controllers: [AuthController],
   providers: [

@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package integration;
+
+import "commons.proto";
+
+// HIS Authentication Request
+message HisLoginRequest {
+  string username = 1;
+  string password = 2;
+  string deviceId = 3;
+  string ipAddress = 4;
+  string userAgent = 5;
+}
+
+// HIS Role Information
+message HisRole {
+  string roleCode = 1;
+  string roleName = 2;
+}
+
+// HIS User Information
+message HisUserInfo {
+  string loginName = 1;
+  string userName = 2;
+  string applicationCode = 3;
+  string gCode = 4;
+  string email = 5;
+  string mobile = 6;
+  repeated HisRole roles = 7;
+}
+
+// HIS Login Response
+message HisLoginResponse {
+  bool success = 1;
+  string message = 2;
+  string tokenCode = 3;
+  string renewCode = 4;
+  string loginTime = 5;
+  string expireTime = 6;
+  string validAddress = 7;
+  string loginAddress = 8;
+  string versionApp = 9;
+  string machineName = 10;
+  string lastAccessTime = 11;
+  HisUserInfo user = 12;
+}
+
+// User Synchronization Request
+message SyncUserRequest {
+  HisUserInfo user = 1;
+}
+
+// User Synchronization Response
+message SyncUserResponse {
+  string userId = 1;
+  bool created = 2;
+  string username = 3;
+  string email = 4;
+}
+
+// Get Token Request
+message GetTokenRequest {
+  string userId = 1;
+}
+
+// Get Token Response
+message GetTokenResponse {
+  bool found = 1;
+  string tokenCode = 2;
+  string renewCode = 3;
+  string expireTime = 4;
+  string loginTime = 5;
+}
+
+// Invalidate Token Request
+message InvalidateTokenRequest {
+  string userId = 1;
+}
+
+// Renew Token Request
+message RenewTokenRequest {
+  string renewCode = 1;
+  string userId = 2; // Optional: for logging and Redis update
+}
+
+// Renew Token Response
+message RenewTokenResponse {
+  bool success = 1;
+  string message = 2;
+  string tokenCode = 3;
+  string renewCode = 4;
+  string loginTime = 5;
+  string expireTime = 6;
+  string validAddress = 7;
+  string loginAddress = 8;
+  string versionApp = 9;
+  string machineName = 10;
+  string lastAccessTime = 11;
+}
+
+service IntegrationService {
+  rpc hisLogin (HisLoginRequest) returns (HisLoginResponse) {}
+  rpc syncUser (SyncUserRequest) returns (SyncUserResponse) {}
+  rpc getToken (GetTokenRequest) returns (GetTokenResponse) {}
+  rpc invalidateToken (InvalidateTokenRequest) returns (commons.Count) {}
+  rpc renewToken (RenewTokenRequest) returns (RenewTokenResponse) {}
+}
