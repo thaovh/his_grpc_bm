@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { IntegrationController } from './integration.controller';
 import { IntegrationService } from '../auth/integration.service';
 import { InventoryModule } from '../inventory/inventory.module';
@@ -19,12 +19,13 @@ import { MasterDataModule } from '../master-data/master-data.module';
             options: {
               url: `${grpcConfig.integration.url}:${grpcConfig.integration.port}`,
               package: 'integration',
-              protoPath: join(__dirname, '../_proto/integration.proto'),
+              protoPath: PROTO_PATH.integration,
               loader: {
                 enums: String,
                 objects: true,
                 arrays: true,
-                include: [join(__dirname, '../_proto')],
+                includeDirs: [PROTO_ROOT_DIR],
+
               },
             },
           };

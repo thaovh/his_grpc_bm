@@ -201,6 +201,7 @@ export class InventoryService implements OnModuleInit {
       // Newly added numeric fields from HIS
       'lastExpTime', 'finishTime', 'finishDate', 'isExportEqualApprove',
       'lastApprovalTime', 'lastApprovalDate', 'numOrder', 'tdlIntructionDateMin',
+      'hisExpMestId', // Added for generic ExpMest
     ];
 
     numberFields.forEach(field => {
@@ -685,7 +686,7 @@ export class InventoryService implements OnModuleInit {
       const keys = Object.keys(obj);
       for (const key of keys) {
         const value = obj[key];
-        
+
         if (value === null || value === undefined) {
           continue;
         }
@@ -766,6 +767,7 @@ export class InventoryService implements OnModuleInit {
       'numOrder', 'priority', 'treatmentIsActive', 'lastExpTime',
       'finishTime', 'finishDate', 'isExportEqualApprove',
       'lastApprovalTime', 'lastApprovalDate', 'hisCreateTime', 'hisModifyTime',
+      'hisExpMestId', 'his_exp_mest_id', // Added specific overrides
     ];
 
     // Convert known numeric fields
@@ -1252,6 +1254,12 @@ export class InventoryService implements OnModuleInit {
         this.inventoryGrpcService.findExpMestOthersByHisIds({ hisExpMestIds })
       ) as any;
       const items = result.data || [];
+
+      if (items.length > 0) {
+        console.log('=== [DEBUG] findExpMestOthersByHisIds.rawItem keys ===', Object.keys(items[0]));
+        console.log('=== [DEBUG] findExpMestOthersByHisIds.rawItem.hisExpMestId type ===', typeof items[0].hisExpMestId);
+        console.log('=== [DEBUG] findExpMestOthersByHisIds.rawItem.hisExpMestId ===', JSON.stringify(items[0].hisExpMestId));
+      }
       items.forEach((item: any) => this.convertExpMestOtherLongToNumber(item));
       await this.enrichWithExportStatus(items);
       return items;
@@ -1400,21 +1408,21 @@ export class InventoryService implements OnModuleInit {
         orderBy: orderBy || '',
       })
     ) as any;
-    
+
     console.log('=== [DEBUG] API Gateway: After gRPC call ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
     console.log('result (first 1000 chars):', JSON.stringify(result).substring(0, 1000));
-    
+
     // Serialize Long objects from gRPC response
     this.serializeLongObjects(result);
-    
+
     console.log('=== [DEBUG] API Gateway: After serializeLongObjects ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
-    
+
     return result;
   }
 
@@ -1426,21 +1434,21 @@ export class InventoryService implements OnModuleInit {
         orderBy: orderBy || '',
       })
     ) as any;
-    
+
     console.log('=== [DEBUG] API Gateway: After gRPC call ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
     console.log('result (first 1000 chars):', JSON.stringify(result).substring(0, 1000));
-    
+
     // Serialize Long objects from gRPC response
     this.serializeLongObjects(result);
-    
+
     console.log('=== [DEBUG] API Gateway: After serializeLongObjects ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
-    
+
     return result;
   }
 
@@ -1452,20 +1460,20 @@ export class InventoryService implements OnModuleInit {
         orderBy: orderBy || '',
       })
     ) as any;
-    
+
     console.log('=== [DEBUG] API Gateway: After gRPC call ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
-    
+
     // Serialize Long objects from gRPC response
     this.serializeLongObjects(result);
-    
+
     console.log('=== [DEBUG] API Gateway: After serializeLongObjects ===');
     console.log('result.working_state:', result.working_state);
     console.log('hasWorkingState:', !!result.working_state);
     console.log('result keys:', Object.keys(result || {}));
-    
+
     return result;
   }
 

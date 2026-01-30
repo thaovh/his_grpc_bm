@@ -2,8 +2,7 @@ syntax = "proto3";
 
 package master_data;
 
-import "commons.proto";
-
+import "./commons.proto";
 import "master-data/unit-of-measure.proto";
 import "master-data/export-status.proto";
 import "master-data/branch.proto";

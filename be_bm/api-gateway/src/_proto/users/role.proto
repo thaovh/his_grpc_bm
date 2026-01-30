@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package users;
+
+message Role {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+}
+
+message RoleList {
+  repeated Role data = 1;
+}
+
+message UserRole {
+  string id = 1;
+  string userId = 2;
+  string roleId = 3;
+  Role role = 4;
+}
+
+message UserRoleList {
+  repeated UserRole data = 1;
+}
+
+message UserRoleInput {
+  string userId = 1;
+  string roleCode = 2;
+}

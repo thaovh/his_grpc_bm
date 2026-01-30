@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package users;
+
+message SaveDeviceTokenRequest {
+  string userId = 1;
+  string employeeCode = 2;
+  string deviceToken = 3;
+  string deviceType = 4;
+  string deviceName = 5;
+  string deviceOsVersion = 6;
+  string appVersion = 7;
+}
+
+message SaveDeviceTokenResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RemoveDeviceTokenRequest {
+  string deviceToken = 1;
+}
+
+message RemoveDeviceTokenResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetDeviceTokensRequest {
+  string employeeCode = 1;
+}
+
+message GetDeviceTokensResponse {
+  repeated string tokens = 1;
+}

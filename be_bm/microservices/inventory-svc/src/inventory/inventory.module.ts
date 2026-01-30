@@ -4,7 +4,10 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { LoggerModule } from 'nestjs-pino';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+import * as path from 'path';
+
+
 
 import { ExpMest } from './entities/exp-mest.entity';
 import { ExpMestMedicine } from './entities/exp-mest-medicine.entity';
@@ -95,12 +98,13 @@ const QueryHandlers = [
             options: {
               url: `${process.env.MASTER_DATA_SVC_URL || 'localhost'}:${process.env.MASTER_DATA_SVC_PORT || '50055'}`,
               package: 'master_data',
-              protoPath: join(__dirname, '../_proto/master-data.proto'),
+              protoPath: PROTO_PATH.masterData,
               loader: {
                 enums: String,
                 objects: true,
                 arrays: true,
-                include: [join(__dirname, '../_proto')],
+                includeDirs: [PROTO_ROOT_DIR],
+
               },
             },
           };
@@ -115,7 +119,7 @@ const QueryHandlers = [
             options: {
               url: `${process.env.USERS_SVC_URL || 'localhost'}:${process.env.USERS_SVC_PORT || '50051'}`,
               package: 'users',
-              protoPath: join(__dirname, '../_proto/users.proto'),
+              protoPath: PROTO_PATH.users,
               loader: {
                 enums: String,
                 objects: true,
@@ -123,7 +127,8 @@ const QueryHandlers = [
                 keepCase: true, // Keep field names as in proto (FindByIdWithProfile, not findByIdWithProfile)
                 defaults: true, // Include default values
                 oneofs: true,
-                include: [join(__dirname, '../_proto')],
+
+                includeDirs: [PROTO_ROOT_DIR],
               },
             },
           };

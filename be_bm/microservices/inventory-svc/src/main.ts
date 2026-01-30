@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
@@ -11,7 +11,7 @@ async function bootstrap() {
     options: {
       url: `${process.env.URL}:${process.env.PORT}`,
       package: 'inventory',
-      protoPath: join(__dirname, './_proto/inventory.proto'),
+      protoPath: PROTO_PATH.inventory.main,
       loader: {
         enums: String,
         objects: true,
@@ -19,7 +19,8 @@ async function bootstrap() {
         keepCase: true, // Keep field names as in proto (working_state, not workingState)
         defaults: true, // Include default values
         oneofs: true,
-        include: [join(__dirname, './_proto')],
+        includeDirs: [PROTO_ROOT_DIR],
+
       },
     },
   });

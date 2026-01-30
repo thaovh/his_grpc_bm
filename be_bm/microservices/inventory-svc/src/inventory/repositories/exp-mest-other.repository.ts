@@ -62,7 +62,7 @@ export class ExpMestOtherRepository {
    */
   async findByHisExpMestIds(hisExpMestIds: number[]): Promise<ExpMestOther[]> {
     this.logger.info('ExpMestOtherRepository#findByHisExpMestIds.call', { count: hisExpMestIds.length });
-    
+
     if (!hisExpMestIds || hisExpMestIds.length === 0) {
       return [];
     }
@@ -77,15 +77,28 @@ export class ExpMestOtherRepository {
     }
 
     // Use TypeORM In() operator
+    if (validIds.includes(19390192)) {
+      this.logger.warn(`[DEBUG-REPO] Searching for 19390192 in DB. ValidIds count: ${validIds.length}`);
+    }
+
     const result = await this.expMestOtherRepository.find({
       where: { hisExpMestId: In(validIds) },
     });
 
+    if (result.find(i => Number(i.hisExpMestId) === 19390192 || (i.hisExpMestId as any)?.low === 19390192)) {
+      this.logger.warn(`[DEBUG-REPO] Found 19390192 in DB result.`);
+    } else if (validIds.includes(19390192)) {
+      this.logger.warn(`[DEBUG-REPO] 19390192 NOT found in DB result!`);
+      // Check if it exists individually?
+      const checkSingle = await this.expMestOtherRepository.findOne({ where: { hisExpMestId: 19390192 } });
+      this.logger.warn(`[DEBUG-REPO] Single check for 19390192: ${!!checkSingle} (ID: ${checkSingle?.id}, deletedAt: ${checkSingle?.deletedAt})`);
+    }
+
     result.forEach(item => this.convertLongToNumber(item));
-    this.logger.info('ExpMestOtherRepository#findByHisExpMestIds.result', { 
+    this.logger.info('ExpMestOtherRepository#findByHisExpMestIds.result', {
       requested: hisExpMestIds.length,
       valid: validIds.length,
-      found: result.length 
+      found: result.length
     });
     return result;
   }
@@ -98,15 +111,15 @@ export class ExpMestOtherRepository {
   }
 
   async create(dto: CreateExpMestOtherDto): Promise<ExpMestOther> {
-    this.logger.info('ExpMestOtherRepository#create.call', { 
+    this.logger.info('ExpMestOtherRepository#create.call', {
       hisExpMestId: dto.hisExpMestId,
-      workingStateId: dto.workingStateId 
+      workingStateId: dto.workingStateId
     });
-    
+
     const { randomUUID } = require('crypto');
     const id = randomUUID();
     const now = new Date();
-    
+
     const data: any = {
       id,
       hisExpMestId: this.convertToNumber(dto.hisExpMestId),
@@ -203,7 +216,7 @@ export class ExpMestOtherRepository {
 
   async update(id: string, dto: UpdateExpMestOtherDto): Promise<ExpMestOther> {
     this.logger.info('ExpMestOtherRepository#update.call', { id });
-    
+
     const existing = await this.findById(id);
     if (!existing) {
       throw new Error(`ExpMestOther with id ${id} not found`);
@@ -287,7 +300,7 @@ export class ExpMestOtherRepository {
     if (dto.hisModifyTime !== undefined) updateData.hisModifyTime = this.convertToNumber(dto.hisModifyTime);
     if (dto.hisCreator !== undefined) updateData.hisCreator = dto.hisCreator ?? null;
     if (dto.hisModifier !== undefined) updateData.hisModifier = dto.hisModifier ?? null;
-    
+
     updateData.updatedAt = new Date();
     updateData.updatedBy = dto.updatedBy;
     updateData.version = existing.version + 1;

@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package inventory;
+
+import "../commons.proto";
+
+// Summary Request Messages
+message GetExpMestCabinetSummaryRequest {
+  int64 expMestId = 1; // HIS ID
+  string orderBy = 2; // Optional sort field (e.g., "medicineName", "-amount")
+}
+
+message GetExpMestOtherSummaryRequest {
+  int64 expMestId = 1; // HIS ID
+  string orderBy = 2; // Optional sort field
+}
+
+message GetInpatientExpMestSummaryRequest {
+  int64 expMestId = 1; // HIS ID (aggrExpMestId)
+  string orderBy = 2; // Optional sort field
+}
+
+// User Info Message
+message UserInfo {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string firstName = 4;
+  string lastName = 5;
+}
+
+// Export Status Message
+message ExportStatus {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+  string createdBy = 7;
+  string updatedBy = 8;
+  int32 version = 9;
+  int32 isActive = 10;
+}
+
+// Medicine Summary Message
+message MedicineSummary {
+  string medicineCode = 1;
+  string medicineName = 2;
+  string serviceUnitCode = 3;
+  string serviceUnitName = 4;
+  double amount = 5;
+  repeated int64 hisIds = 6;
+  bool is_exported = 7;
+  string exportedByUser = 8; // UUID
+  int64 exportedTime = 9;
+  bool is_actual_exported = 10;
+  string actualExportedByUser = 11; // UUID
+  int64 actualExportedTime = 12;
+  UserInfo exportedByUserInfo = 13;
+  UserInfo actualExportedByUserInfo = 14;
+}
+
+// Exp Mest Summary Response
+message ExpMestSummaryResponse {
+  string expMestId = 1; // Local UUID
+  int64 hisExpMestId = 2;
+  string expMestCode = 3;
+  string mediStockCode = 4;
+  string mediStockName = 5;
+  string reqDepartmentCode = 6;
+  string reqDepartmentName = 7;
+  string workingStateId = 8;
+  ExportStatus working_state = 9;
+  repeated MedicineSummary medicines = 10;
+}
+
+// Working State Update Request
+message CheckAndUpdateWorkingStateRequest {
+  int64 expMestId = 1; // HIS ID
+  string expMestType = 2; // "cabinet" | "other" | "inpatient"
+}
+
+// Working State Update Response
+message CheckAndUpdateWorkingStateResponse {
+  bool updated = 1;
+  string oldWorkingStateId = 2;
+  string newWorkingStateId = 3;
+  string reason = 4;
+  ExpMestSummaryResponse expMest = 5; // Updated exp mest data
+}

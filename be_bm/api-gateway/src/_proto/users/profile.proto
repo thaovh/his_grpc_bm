@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package users;
+
+message UserProfile {
+  string id = 1;
+  string userId = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string phone = 5;
+  string avatarUrl = 6;
+  string bio = 7;
+  string dateOfBirth = 8;
+  string address = 9;
+  // HIS Employee fields
+  string diploma = 17;
+  int32 isDoctor = 18;
+  int32 isNurse = 19;
+  string title = 20;
+  int64 careerTitleId = 21;
+  int64 departmentId = 22;
+  int64 branchId = 23;
+  string defaultMediStockIds = 24;
+  int64 genderId = 25;
+  string ethnicCode = 26;
+  string identificationNumber = 27;
+  string socialInsuranceNumber = 28;
+  string diplomaDate = 29;
+  string diplomaPlace = 30;
+  int32 maxServiceReqPerDay = 31;
+  int32 doNotAllowSimultaneity = 32;
+  int32 isAdmin = 33;
+  // Base fields
+  string createdAt = 10;
+  string updatedAt = 11;
+  string deletedAt = 12;
+  int32 version = 13;
+  string createdBy = 14;
+  string updatedBy = 15;
+  int32 isActive = 16;
+}
+
+message UpdateUserProfileInput {
+  string userId = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string phone = 4;
+  string avatarUrl = 5;
+  string bio = 6;
+  string dateOfBirth = 7;
+  string address = 8;
+  // HIS Employee fields
+  string diploma = 9;
+  int32 isDoctor = 10;
+  int32 isNurse = 11;
+  string title = 12;
+  int64 careerTitleId = 13;
+  int64 departmentId = 14;
+  int64 branchId = 15;
+  string defaultMediStockIds = 16;
+  int64 genderId = 17;
+  string ethnicCode = 18;
+  string identificationNumber = 19;
+  string socialInsuranceNumber = 20;
+  string diplomaDate = 21;
+  string diplomaPlace = 22;
+  int32 maxServiceReqPerDay = 23;
+  int32 doNotAllowSimultaneity = 24;
+  int32 isAdmin = 25;
+}

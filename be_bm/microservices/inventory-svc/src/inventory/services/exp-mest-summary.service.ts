@@ -433,10 +433,19 @@ export class ExpMestSummaryService implements OnModuleInit {
 
     // 3. Fetch all medicines from children
     const allMedicines: any[] = [];
-    for (const child of children) {
-      // Convert child.hisExpMestId from Long object to number if needed
-      const childHisExpMestId = convertLongToNumberRequired(child.hisExpMestId, 'child.hisExpMestId');
-      const medicines = await this.inpatientExpMestMedicineService.findByInpatientExpMestId(childHisExpMestId);
+    if (children.length > 0) {
+      for (const child of children) {
+        // Convert child.hisExpMestId from Long object to number if needed
+        const childHisExpMestId = convertLongToNumberRequired(child.hisExpMestId, 'child.hisExpMestId');
+        const medicines = await this.inpatientExpMestMedicineService.findByInpatientExpMestId(childHisExpMestId);
+        medicines.forEach(med => this.convertLongToNumber(med));
+        allMedicines.push(...medicines);
+      }
+    } else {
+      // Fallback: Fetch medicines directly for the parent (using its HIS ID) if no children found
+      // This handles cases where the ExpMest is not an aggregate and holds medicines directly
+      this.logger.debug('No children found, fetching medicines for parent', { expMestId: expMestIdNumber });
+      const medicines = await this.inpatientExpMestMedicineService.findByInpatientExpMestId(expMestIdNumber);
       medicines.forEach(med => this.convertLongToNumber(med));
       allMedicines.push(...medicines);
     }

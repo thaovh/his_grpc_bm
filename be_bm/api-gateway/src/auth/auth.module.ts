@@ -2,7 +2,8 @@ import { Module, forwardRef } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -22,12 +23,13 @@ import { IntegrationModule } from '../integration/integration.module';
             options: {
               url: `${grpcConfig.auth.url}:${grpcConfig.auth.port}`,
               package: 'auth',
-              protoPath: join(__dirname, '../_proto/auth.proto'),
+              protoPath: PROTO_PATH.auth,
               loader: {
                 enums: String,
                 objects: true,
                 arrays: true,
-                include: [join(__dirname, '../_proto')],
+                includeDirs: [PROTO_ROOT_DIR],
+
               },
             },
           };

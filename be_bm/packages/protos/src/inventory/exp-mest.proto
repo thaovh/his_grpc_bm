@@ -1,0 +1,679 @@
+﻿syntax = "proto3";
+
+package inventory;
+
+import "common/commons.proto";
+
+message ExpMest {
+  // Primary Key
+  int64 expMestId = 1;
+  
+  // Basic Info
+  string expMestCode = 2;
+  int64 expMestTypeId = 3;
+  int64 expMestSttId = 4;
+  int64 mediStockId = 5;
+  
+  // Request Info
+  string reqLoginname = 6;
+  string reqUsername = 7;
+  int64 reqRoomId = 8;
+  int64 reqDepartmentId = 9;
+  int64 createDate = 10;
+  int64 serviceReqId = 11;
+  
+  // Total Price
+  double tdlTotalPrice = 12;
+  
+  // Service Request Info
+  string tdlServiceReqCode = 13;
+  int64 tdlIntructionTime = 14;
+  int64 tdlIntructionDate = 15;
+  
+  // Treatment Info
+  int64 tdlTreatmentId = 16;
+  string tdlTreatmentCode = 17;
+  
+  // Patient Info
+  int64 tdlPatientId = 18;
+  string tdlPatientCode = 19;
+  string tdlPatientName = 20;
+  string tdlPatientFirstName = 21;
+  string tdlPatientLastName = 22;
+  int64 tdlPatientDob = 23;
+  int32 tdlPatientIsHasNotDayDob = 24;
+  string tdlPatientAddress = 25;
+  int64 tdlPatientGenderId = 26;
+  string tdlPatientGenderName = 27;
+  int64 tdlPatientTypeId = 28;
+  string tdlHeinCardNumber = 29;
+  string tdlPatientPhone = 30;
+  string tdlPatientProvinceCode = 31;
+  string tdlPatientCommuneCode = 32;
+  string tdlPatientNationalName = 33;
+  
+  // Virtual Fields
+  double virCreateMonth = 34;
+  double virCreateYear = 35;
+  
+  // ICD Info
+  string icdCode = 36;
+  string icdName = 37;
+  string icdSubCode = 38;
+  string icdText = 39;
+  
+  // User Title
+  string reqUserTitle = 40;
+  
+  // Sub Code
+  string expMestSubCode2 = 41;
+  
+  // Card Prefix
+  string virHeinCardPrefix = 42;
+  
+  // Priority
+  int32 priority = 43;
+  
+  // Denormalized Type Info
+  string expMestTypeCode = 44;
+  string expMestTypeName = 45;
+  
+  // Denormalized Status Info (from HIS)
+  string expMestSttCode = 46;
+  string expMestSttName = 47;
+  
+  // Denormalized Stock Info
+  string mediStockCode = 48;
+  string mediStockName = 49;
+  
+  // Denormalized Department Info
+  string reqDepartmentCode = 50;
+  string reqDepartmentName = 51;
+  
+  // Denormalized Room Info
+  string reqRoomCode = 52;
+  string reqRoomName = 53;
+  
+  // Treatment Status
+  int32 treatmentIsActive = 54;
+  
+  // Denormalized Patient Type Info
+  string patientTypeName = 55;
+  string patientTypeCode = 56;
+  
+  // Local DB Export Status Reference
+  string exportStatusId = 65; // Reference to MST_EXPORT_STATUS.id
+
+  // Aggregated codes (semicolon separated)
+  string tdlAggrPatientCode = 66;
+  string tdlAggrTreatmentCode = 67;
+
+  // Export/approval timing info
+  string lastExpLoginname = 68;
+  string lastExpUsername = 69;
+  int64 lastExpTime = 70;
+  int64 finishTime = 71;
+  int64 finishDate = 72;
+  int32 isExportEqualApprove = 73;
+  string expMestSubCode = 74;
+  string lastApprovalLoginname = 75;
+  string lastApprovalUsername = 76;
+  int64 lastApprovalTime = 77;
+  int64 lastApprovalDate = 78;
+  int64 numOrder = 79;
+  int64 tdlIntructionDateMin = 80;
+  
+  // Base fields
+  string id = 57;
+  string createdAt = 58;
+  string updatedAt = 59;
+  string deletedAt = 60;
+  int32 version = 61;
+  string createdBy = 62;
+  string updatedBy = 63;
+  int32 isActive = 64;
+}
+
+message CreateExpMestInput {
+  int64 expMestId = 1;
+  string expMestCode = 2;
+  int64 expMestTypeId = 3;
+  int64 expMestSttId = 4;
+  int64 mediStockId = 5;
+  string reqLoginname = 6;
+  string reqUsername = 7;
+  int64 reqRoomId = 8;
+  int64 reqDepartmentId = 9;
+  int64 createDate = 10;
+  int64 serviceReqId = 11;
+  double tdlTotalPrice = 12;
+  string tdlServiceReqCode = 13;
+  int64 tdlIntructionTime = 14;
+  int64 tdlIntructionDate = 15;
+  int64 tdlTreatmentId = 16;
+  string tdlTreatmentCode = 17;
+  int64 tdlPatientId = 18;
+  string tdlPatientCode = 19;
+  string tdlPatientName = 20;
+  string tdlPatientFirstName = 21;
+  string tdlPatientLastName = 22;
+  int64 tdlPatientDob = 23;
+  int32 tdlPatientIsHasNotDayDob = 24;
+  string tdlPatientAddress = 25;
+  int64 tdlPatientGenderId = 26;
+  string tdlPatientGenderName = 27;
+  int64 tdlPatientTypeId = 28;
+  string tdlHeinCardNumber = 29;
+  string tdlPatientPhone = 30;
+  string tdlPatientProvinceCode = 31;
+  string tdlPatientCommuneCode = 32;
+  string tdlPatientNationalName = 33;
+  double virCreateMonth = 34;
+  double virCreateYear = 35;
+  string icdCode = 36;
+  string icdName = 37;
+  string icdSubCode = 38;
+  string icdText = 39;
+  string reqUserTitle = 40;
+  string expMestSubCode2 = 41;
+  string virHeinCardPrefix = 42;
+  int32 priority = 43;
+  string expMestTypeCode = 44;
+  string expMestTypeName = 45;
+  string expMestSttCode = 46;
+  string expMestSttName = 47;
+  string mediStockCode = 48;
+  string mediStockName = 49;
+  string reqDepartmentCode = 50;
+  string reqDepartmentName = 51;
+  string reqRoomCode = 52;
+  string reqRoomName = 53;
+  int32 treatmentIsActive = 54;
+  string patientTypeName = 55;
+  string patientTypeCode = 56;
+  string exportStatusId = 57; // Reference to MST_EXPORT_STATUS.id
+  string createdBy = 58; // User ID who creates the record
+  // Aggregated codes (semicolon separated)
+  string tdlAggrPatientCode = 59;
+  string tdlAggrTreatmentCode = 60;
+  // Export/approval timing info
+  string lastExpLoginname = 61;
+  string lastExpUsername = 62;
+  int64 lastExpTime = 63;
+  int64 finishTime = 64;
+  int64 finishDate = 65;
+  int32 isExportEqualApprove = 66;
+  string expMestSubCode = 67;
+  string lastApprovalLoginname = 68;
+  string lastApprovalUsername = 69;
+  int64 lastApprovalTime = 70;
+  int64 lastApprovalDate = 71;
+  int64 numOrder = 72;
+  int64 tdlIntructionDateMin = 73;
+}
+
+message UpdateExpMestInput {
+  string id = 1;
+  string expMestCode = 2;
+  int64 expMestTypeId = 3;
+  int64 expMestSttId = 4;
+  int64 mediStockId = 5;
+  string reqLoginname = 6;
+  string reqUsername = 7;
+  int64 reqRoomId = 8;
+  int64 reqDepartmentId = 9;
+  int64 createDate = 10;
+  int64 serviceReqId = 11;
+  double tdlTotalPrice = 12;
+  string tdlServiceReqCode = 13;
+  int64 tdlIntructionTime = 14;
+  int64 tdlIntructionDate = 15;
+  int64 tdlTreatmentId = 16;
+  string tdlTreatmentCode = 17;
+  int64 tdlPatientId = 18;
+  string tdlPatientCode = 19;
+  string tdlPatientName = 20;
+  string tdlPatientFirstName = 21;
+  string tdlPatientLastName = 22;
+  int64 tdlPatientDob = 23;
+  int32 tdlPatientIsHasNotDayDob = 24;
+  string tdlPatientAddress = 25;
+  int64 tdlPatientGenderId = 26;
+  string tdlPatientGenderName = 27;
+  int64 tdlPatientTypeId = 28;
+  string tdlHeinCardNumber = 29;
+  string tdlPatientPhone = 30;
+  string tdlPatientProvinceCode = 31;
+  string tdlPatientCommuneCode = 32;
+  string tdlPatientNationalName = 33;
+  double virCreateMonth = 34;
+  double virCreateYear = 35;
+  string icdCode = 36;
+  string icdName = 37;
+  string icdSubCode = 38;
+  string icdText = 39;
+  string reqUserTitle = 40;
+  string expMestSubCode2 = 41;
+  string virHeinCardPrefix = 42;
+  int32 priority = 43;
+  string expMestTypeCode = 44;
+  string expMestTypeName = 45;
+  string expMestSttCode = 46;
+  string expMestSttName = 47;
+  string mediStockCode = 48;
+  string mediStockName = 49;
+  string reqDepartmentCode = 50;
+  string reqDepartmentName = 51;
+  string reqRoomCode = 52;
+  string reqRoomName = 53;
+  int32 treatmentIsActive = 54;
+  string patientTypeName = 55;
+  string patientTypeCode = 56;
+  string exportStatusId = 57; // Reference to MST_EXPORT_STATUS.id
+  string updatedBy = 58; // User ID who updates the record
+  // Aggregated codes (semicolon separated)
+  string tdlAggrPatientCode = 59;
+  string tdlAggrTreatmentCode = 60;
+  // Export/approval timing info
+  string lastExpLoginname = 61;
+  string lastExpUsername = 62;
+  int64 lastExpTime = 63;
+  int64 finishTime = 64;
+  int64 finishDate = 65;
+  int32 isExportEqualApprove = 66;
+  string expMestSubCode = 67;
+  string lastApprovalLoginname = 68;
+  string lastApprovalUsername = 69;
+  int64 lastApprovalTime = 70;
+  int64 lastApprovalDate = 71;
+  int64 numOrder = 72;
+  int64 tdlIntructionDateMin = 73;
+}
+
+message ExpMestList {
+  repeated ExpMest data = 1;
+}
+
+// ExpMestMedicine Messages
+message ExpMestMedicine {
+  // Primary Key tá»« HIS
+  int64 hisId = 1; // ID tá»« HIS
+  
+  // Foreign Keys
+  int64 expMestId = 2; // EXP_MEST_ID (HIS ID)
+  string expMestLocalId = 3; // EXP_MEST_LOCAL_ID (UUID local, optional)
+  
+  // Medicine Info
+  int64 medicineId = 4;
+  int64 tdlMediStockId = 5;
+  int64 tdlMedicineTypeId = 6;
+  int64 expMestMetyReqId = 7;
+  int64 ckImpMestMedicineId = 8;
+  
+  // Export Info
+  int32 isExport = 9;
+  double amount = 10;
+  double exportAmount = 11;
+  string exportByUser = 12;
+  int64 exportTime = 13;
+  
+  // Approval Info
+  string approvalLoginname = 14;
+  string approvalUsername = 15;
+  int64 approvalTime = 16;
+  int64 approvalDate = 17;
+  
+  // Export User Info
+  string expLoginname = 18;
+  string expUsername = 19;
+  int64 expTime = 20;
+  int64 expDate = 21;
+  
+  // Denormalized ExpMest Info
+  string expMestCode = 22;
+  int64 mediStockId = 23;
+  int64 expMestSttId = 24;
+  
+  // Price Info
+  double impPrice = 25;
+  double impVatRatio = 26;
+  
+  // Bid/Package Info
+  int64 bidId = 27;
+  string packageNumber = 28;
+  int64 expiredDate = 29;
+  
+  // Medicine Type Info
+  int64 medicineTypeId = 30;
+  string medicineTypeCode = 31;
+  string medicineTypeName = 32;
+  
+  // Import Info
+  int64 impTime = 33;
+  int64 supplierId = 34;
+  
+  // Medicine Details
+  string medicineBytNumOrder = 35;
+  string medicineRegisterNumber = 36;
+  string activeIngrBhytCode = 37;
+  string activeIngrBhytName = 38;
+  string concentra = 39;
+  
+  // Bid Details
+  string tdlBidGroupCode = 40;
+  string tdlBidPackageCode = 41;
+  
+  // Service Info
+  int64 serviceId = 42;
+  string nationalName = 43;
+  int64 manufacturerId = 44;
+  string bytNumOrder = 45;
+  string registerNumber = 46;
+  int64 medicineGroupId = 47;
+  
+  // Unit Info
+  int64 serviceUnitId = 48;
+  string serviceUnitCode = 49;
+  string serviceUnitName = 50;
+  int32 medicineNumOrder = 51;
+  
+  // Supplier Info
+  string supplierCode = 52;
+  string supplierName = 53;
+  
+  // Bid Info
+  string bidNumber = 54;
+  string bidName = 55;
+  
+  // Use Form Info
+  string medicineUseFormCode = 56;
+  string medicineUseFormName = 57;
+  int32 medicineUseFormNumOrder = 58;
+  
+  // Stock Info
+  double sumInStock = 59;
+  double sumByMedicineInStock = 60;
+  
+  // Price & Tax Info (Additional)
+  double price = 61;
+  double vatRatio = 62;
+  double virPrice = 63;
+  double taxRatio = 64;
+  
+  // Order & Amount Info
+  int32 numOrder = 65;
+  double presAmount = 66;
+  
+  // Patient & Treatment Info
+  int64 patientTypeId = 67;
+  string patientTypeCode = 68;
+  string patientTypeName = 69;
+  int64 tdlPatientId = 70;
+  int64 tdlTreatmentId = 71;
+  int64 tdlServiceReqId = 72;
+  
+  // Instruction & Tutorial
+  int64 useTimeTo = 73;
+  string tutorial = 74;
+  int64 tdlIntructionTime = 75;
+  int64 tdlIntructionDate = 76;
+  string htuText = 77;
+  
+  // Dosage Info
+  string morning = 78;
+  string evening = 79;
+  
+  // ExpMest Denormalized Info (Additional)
+  int64 expMestTypeId = 80;
+  int64 tdlAggrExpMestId = 81;
+  int64 aggrExpMestId = 82;
+  int64 reqRoomId = 83;
+  int64 reqDepartmentId = 84;
+  string reqUserTitle = 85;
+  string reqLoginname = 86;
+  string reqUsername = 87;
+  
+  // Medicine Group & Use Form (Additional)
+  int64 medicineUseFormId = 88;
+  int64 medicineLineId = 89;
+  string medicineGroupCode = 90;
+  string medicineGroupName = 91;
+  int32 medicineGroupNumOrder = 92;
+  
+  // Manufacturer & Stock Info (Additional)
+  string manufacturerCode = 93;
+  string manufacturerName = 94;
+  string mediStockCode = 95;
+  string mediStockName = 96;
+  
+  // Base fields
+  string id = 100; // UUID local
+  string createdAt = 101;
+  string updatedAt = 102;
+  string deletedAt = 103;
+  int32 version = 104;
+  string createdBy = 105;
+  string updatedBy = 106;
+  int32 isActive = 107;
+}
+
+message CreateExpMestMedicineInput {
+  int64 hisId = 1;
+  int64 expMestId = 2;
+  string expMestLocalId = 3; // UUID local cá»§a ExpMest (optional)
+  int64 medicineId = 4;
+  int64 tdlMediStockId = 5;
+  int64 tdlMedicineTypeId = 6;
+  int64 expMestMetyReqId = 7;
+  int64 ckImpMestMedicineId = 8;
+  int32 isExport = 9;
+  double amount = 10;
+  double exportAmount = 11;
+  string exportByUser = 12;
+  int64 exportTime = 13;
+  string approvalLoginname = 14;
+  string approvalUsername = 15;
+  int64 approvalTime = 16;
+  int64 approvalDate = 17;
+  string expLoginname = 18;
+  string expUsername = 19;
+  int64 expTime = 20;
+  int64 expDate = 21;
+  string expMestCode = 22;
+  int64 mediStockId = 23;
+  int64 expMestSttId = 24;
+  double impPrice = 25;
+  double impVatRatio = 26;
+  int64 bidId = 27;
+  string packageNumber = 28;
+  int64 expiredDate = 29;
+  int64 medicineTypeId = 30;
+  string medicineTypeCode = 31;
+  string medicineTypeName = 32;
+  int64 impTime = 33;
+  int64 supplierId = 34;
+  string medicineBytNumOrder = 35;
+  string medicineRegisterNumber = 36;
+  string activeIngrBhytCode = 37;
+  string activeIngrBhytName = 38;
+  string concentra = 39;
+  string tdlBidGroupCode = 40;
+  string tdlBidPackageCode = 41;
+  int64 serviceId = 42;
+  string nationalName = 43;
+  int64 manufacturerId = 44;
+  string bytNumOrder = 45;
+  string registerNumber = 46;
+  int64 medicineGroupId = 47;
+  int64 serviceUnitId = 48;
+  string serviceUnitCode = 49;
+  string serviceUnitName = 50;
+  int32 medicineNumOrder = 51;
+  string supplierCode = 52;
+  string supplierName = 53;
+  string bidNumber = 54;
+  string bidName = 55;
+  string medicineUseFormCode = 56;
+  string medicineUseFormName = 57;
+  int32 medicineUseFormNumOrder = 58;
+  double sumInStock = 59;
+  double sumByMedicineInStock = 60;
+  // Price & Tax Info (Additional)
+  double price = 62;
+  double vatRatio = 63;
+  double virPrice = 64;
+  double taxRatio = 65;
+  // Order & Amount Info
+  int32 numOrder = 66;
+  double presAmount = 67;
+  // Patient & Treatment Info
+  int64 patientTypeId = 68;
+  string patientTypeCode = 69;
+  string patientTypeName = 70;
+  int64 tdlPatientId = 71;
+  int64 tdlTreatmentId = 72;
+  int64 tdlServiceReqId = 73;
+  // Instruction & Tutorial
+  int64 useTimeTo = 74;
+  string tutorial = 75;
+  int64 tdlIntructionTime = 76;
+  int64 tdlIntructionDate = 77;
+  string htuText = 78;
+  // Dosage Info
+  string morning = 79;
+  string evening = 80;
+  // ExpMest Denormalized Info (Additional)
+  int64 expMestTypeId = 81;
+  int64 tdlAggrExpMestId = 82;
+  int64 aggrExpMestId = 83;
+  int64 reqRoomId = 84;
+  int64 reqDepartmentId = 85;
+  string reqUserTitle = 86;
+  string reqLoginname = 87;
+  string reqUsername = 88;
+  // Medicine Group & Use Form (Additional)
+  int64 medicineUseFormId = 89;
+  int64 medicineLineId = 90;
+  string medicineGroupCode = 91;
+  string medicineGroupName = 92;
+  int32 medicineGroupNumOrder = 93;
+  // Manufacturer & Stock Info (Additional)
+  string manufacturerCode = 94;
+  string manufacturerName = 95;
+  string mediStockCode = 96;
+  string mediStockName = 97;
+  string createdBy = 61;
+}
+
+message UpdateExpMestMedicineInput {
+  string id = 1; // UUID local
+  int64 expMestId = 2;
+  string expMestLocalId = 3; // UUID local cá»§a ExpMest (optional)
+  int64 medicineId = 4;
+  int64 tdlMediStockId = 5;
+  int64 tdlMedicineTypeId = 6;
+  int64 expMestMetyReqId = 7;
+  int64 ckImpMestMedicineId = 8;
+  int32 isExport = 9;
+  double amount = 10;
+  double exportAmount = 11;
+  string exportByUser = 12;
+  int64 exportTime = 13;
+  string approvalLoginname = 14;
+  string approvalUsername = 15;
+  int64 approvalTime = 16;
+  int64 approvalDate = 17;
+  string expLoginname = 18;
+  string expUsername = 19;
+  int64 expTime = 20;
+  int64 expDate = 21;
+  string expMestCode = 22;
+  int64 mediStockId = 23;
+  int64 expMestSttId = 24;
+  double impPrice = 25;
+  double impVatRatio = 26;
+  int64 bidId = 27;
+  string packageNumber = 28;
+  int64 expiredDate = 29;
+  int64 medicineTypeId = 30;
+  string medicineTypeCode = 31;
+  string medicineTypeName = 32;
+  int64 impTime = 33;
+  int64 supplierId = 34;
+  string medicineBytNumOrder = 35;
+  string medicineRegisterNumber = 36;
+  string activeIngrBhytCode = 37;
+  string activeIngrBhytName = 38;
+  string concentra = 39;
+  string tdlBidGroupCode = 40;
+  string tdlBidPackageCode = 41;
+  int64 serviceId = 42;
+  string nationalName = 43;
+  int64 manufacturerId = 44;
+  string bytNumOrder = 45;
+  string registerNumber = 46;
+  int64 medicineGroupId = 47;
+  int64 serviceUnitId = 48;
+  string serviceUnitCode = 49;
+  string serviceUnitName = 50;
+  int32 medicineNumOrder = 51;
+  string supplierCode = 52;
+  string supplierName = 53;
+  string bidNumber = 54;
+  string bidName = 55;
+  string medicineUseFormCode = 56;
+  string medicineUseFormName = 57;
+  int32 medicineUseFormNumOrder = 58;
+  double sumInStock = 59;
+  double sumByMedicineInStock = 60;
+  // Price & Tax Info (Additional)
+  double price = 62;
+  double vatRatio = 63;
+  double virPrice = 64;
+  double taxRatio = 65;
+  // Order & Amount Info
+  int32 numOrder = 66;
+  double presAmount = 67;
+  // Patient & Treatment Info
+  int64 patientTypeId = 68;
+  string patientTypeCode = 69;
+  string patientTypeName = 70;
+  int64 tdlPatientId = 71;
+  int64 tdlTreatmentId = 72;
+  int64 tdlServiceReqId = 73;
+  // Instruction & Tutorial
+  int64 useTimeTo = 74;
+  string tutorial = 75;
+  int64 tdlIntructionTime = 76;
+  int64 tdlIntructionDate = 77;
+  string htuText = 78;
+  // Dosage Info
+  string morning = 79;
+  string evening = 80;
+  // ExpMest Denormalized Info (Additional)
+  int64 expMestTypeId = 81;
+  int64 tdlAggrExpMestId = 82;
+  int64 aggrExpMestId = 83;
+  int64 reqRoomId = 84;
+  int64 reqDepartmentId = 85;
+  string reqUserTitle = 86;
+  string reqLoginname = 87;
+  string reqUsername = 88;
+  // Medicine Group & Use Form (Additional)
+  int64 medicineUseFormId = 89;
+  int64 medicineLineId = 90;
+  string medicineGroupCode = 91;
+  string medicineGroupName = 92;
+  int32 medicineGroupNumOrder = 93;
+  // Manufacturer & Stock Info (Additional)
+  string manufacturerCode = 94;
+  string manufacturerName = 95;
+  string mediStockCode = 96;
+  string mediStockName = 97;
+  string updatedBy = 61;
+}
+
+message ExpMestMedicineList {
+  repeated ExpMestMedicine data = 1;
+}
+

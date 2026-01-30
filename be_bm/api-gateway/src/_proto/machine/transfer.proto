@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package machine;
+
+message Transfer {
+    string id = 1;
+    string machineId = 2;
+    string fromBranchId = 3;
+    string toBranchId = 4;
+    string fromDepartmentId = 5;
+    string toDepartmentId = 6;
+    string transferDate = 7;
+    string statusId = 8;
+    string transferTypeId = 9;
+    string reason = 10;
+    string referenceNumber = 11;
+    string createdAt = 12;
+    string updatedAt = 13;
+    string createdBy = 14;
+    string updatedBy = 15;
+    int32 version = 16;
+    int32 isActive = 17;
+}
+
+message TransferList {
+    repeated Transfer data = 1;
+}
+
+message CreateTransferInput {
+    string machineId = 1;
+    string fromBranchId = 2;
+    string toBranchId = 3;
+    string fromDepartmentId = 4;
+    string toDepartmentId = 5;
+    string transferDate = 6;
+    string statusId = 7;
+    string transferTypeId = 8;
+    string reason = 9;
+    string referenceNumber = 10;
+    string createdBy = 11;
+}
+
+message UpdateTransferInput {
+    string id = 1;
+    string statusId = 2;
+    string reason = 3;
+    string referenceNumber = 4;
+    string updatedBy = 5;
+}

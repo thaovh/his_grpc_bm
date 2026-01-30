@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -20,7 +20,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'attendance',
-      protoPath: join(__dirname, './_proto/attendance.proto'),
+      protoPath: PROTO_PATH.attendance,
       url: `0.0.0.0:${process.env.GRPC_PORT || 50057}`,
       loader: {
         keepCase: true,
@@ -28,7 +28,8 @@ async function bootstrap() {
         enums: String,
         defaults: true,
         oneofs: true,
-        includeDirs: [join(__dirname, './_proto')],
+        includeDirs: [PROTO_ROOT_DIR],
+
       },
     },
   });

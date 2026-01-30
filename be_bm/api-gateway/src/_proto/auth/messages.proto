@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package auth;
+
+message UserInfo {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  int64 acsId = 4;
+  repeated string roles = 5;
+}
+
+message ExternalToken {
+  string tokenCode = 1;
+  string renewCode = 2;
+  string expireTime = 3;
+  string loginTime = 4;
+}

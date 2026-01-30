@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
 import { forwardRef } from '@nestjs/common';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 import { AuthModule } from '../auth/auth.module';
 
 import { UsersService } from './users.service';
@@ -22,12 +23,12 @@ import { RolesController } from './roles.controller';
             options: {
               url: `${grpcConfig.users.url}:${grpcConfig.users.port}`,
               package: 'users',
-              protoPath: join(__dirname, '../_proto/users.proto'),
+              protoPath: PROTO_PATH.users,
               loader: {
                 enums: String,
                 objects: true,
                 arrays: true,
-                include: [join(__dirname, '../_proto')],
+                includeDirs: [PROTO_ROOT_DIR],
               },
             },
           };

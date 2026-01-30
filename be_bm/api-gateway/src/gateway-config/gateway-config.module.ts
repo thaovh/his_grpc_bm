@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 import { GatewayConfigService } from './gateway-config.service';
 import { GatewayConfigController } from './gateway-config.controller';
 import { AuthModule } from '../auth/auth.module';
@@ -20,13 +21,14 @@ import { AuthModule } from '../auth/auth.module';
                         options: {
                             url: `${gatewayConfig.url || 'localhost'}:${gatewayConfig.port || '50058'}`,
                             package: 'gateway_config',
-                            protoPath: join(__dirname, '../_proto/gateway-config.proto'),
+                            protoPath: PROTO_PATH.gatewayConfig,
                             loader: {
                                 keepCase: true,
                                 enums: String,
                                 objects: true,
                                 arrays: true,
-                                include: [join(__dirname, '../_proto')],
+                                includeDirs: [PROTO_ROOT_DIR],
+
                             },
                         },
                     };

@@ -1,7 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
@@ -26,15 +27,16 @@ import { UsersModule } from '../users/users.module';
             options: {
               url: `${grpcConfig.inventory.url}:${grpcConfig.inventory.port}`,
               package: 'inventory',
-              protoPath: join(__dirname, '../_proto/inventory.proto'),
+              protoPath: PROTO_PATH.inventory.main,
               loader: {
                 enums: String,
                 objects: true,
                 arrays: true,
+                includeDirs: [PROTO_ROOT_DIR],
                 keepCase: true, // Keep field names as in proto (working_state, not workingState)
                 defaults: true, // Include default values
                 oneofs: true,
-                include: [join(__dirname, '../_proto')],
+
               },
             },
           };

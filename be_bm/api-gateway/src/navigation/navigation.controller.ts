@@ -13,7 +13,7 @@ export class NavigationController {
 
     @ApiOperation({ summary: 'Get app navigation tree based on user roles' })
     @Get()
-    @Resource('app.navigation')
+    @Resource('app.navigation.read')
     async getNavigation(@Req() req: any) {
         // req.user is populated by JwtAuthGuard (decoded token)
         const roleCodes = req.user?.roles || [];

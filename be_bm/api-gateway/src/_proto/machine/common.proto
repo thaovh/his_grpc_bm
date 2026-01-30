@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package machine;
+
+message Query {
+    string where = 1;
+    string order = 2;
+    int32 limit = 3;
+    int32 offset = 4;
+    string include = 5;
+}
+
+message Id {
+    string id = 1;
+}
+
+message Name {
+    string name = 1;
+}
+
+message Count {
+    int32 count = 1;
+}

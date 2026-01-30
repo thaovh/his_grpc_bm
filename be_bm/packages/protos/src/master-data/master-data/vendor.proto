@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package master_data;
+
+import "common/commons.proto";
+
+// Vendor - Nhà cung cấp/Nhà thầu
+message Vendor {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string address = 4;
+  string phone = 5;
+  string email = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+  string createdBy = 9;
+  string updatedBy = 10;
+  int32 version = 11;
+  int32 isActive = 12;
+}
+
+message CreateVendorInput {
+  string code = 1;
+  string name = 2;
+  string address = 3;
+  string phone = 4;
+  string email = 5;
+  string createdBy = 6;
+}
+
+message UpdateVendorInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string address = 4;
+  string phone = 5;
+  string email = 6;
+  string updatedBy = 7;
+}
+
+message VendorList {
+  repeated Vendor data = 1;
+}

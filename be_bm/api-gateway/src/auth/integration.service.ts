@@ -27,7 +27,7 @@ interface IntegrationGrpcService {
     userId?: string;
   }): any;
   getExpMestById(data: {
-    expMestId: number;
+    id: number;
     includeDeleted?: boolean;
     dataDomainFilter?: boolean;
     userId?: string;
@@ -48,13 +48,13 @@ interface IntegrationGrpcService {
     userId?: string;
   }): any;
   getInpatientExpMestById(data: {
-    expMestId: number;
+    id: number;
     includeDeleted?: boolean;
     dataDomainFilter?: boolean;
     userId?: string;
   }): any;
   getInpatientExpMestDetails(data: {
-    aggrExpMestId: number;
+    id: number;
     includeDeleted?: boolean;
     dataDomainFilter?: boolean;
     userId?: string;
@@ -81,6 +81,22 @@ interface IntegrationGrpcService {
     userId?: string;
   }): any;
   updateWorkInfo(data: any): any;
+  syncInpatientExpMest(data: { expMestId: number; userId: string }): any;
+  syncExpMestOther(data: { expMestId: number; userId: string }): any;
+  getInpatientExpMestSummaryFromHis(data: {
+    expMestId: number;
+    userId: string;
+  }): any;
+  enrichExpMestsWithSyncStatus(data: {
+    expMestIds: number[];
+    expMestType: string;
+    userId?: string;
+  }): any;
+  autoUpdateExpMestSttId(data: {
+    expMestIds: number[];
+    expMestType: string;
+    userId: string;
+  }): any;
 }
 
 @Injectable()
@@ -335,6 +351,9 @@ export class IntegrationService implements OnModuleInit {
       result.data = result.data.map((s: any) => {
         if (!s) return s;
         ['id', 'createTime', 'modifyTime'].forEach(f => { if (s[f] !== undefined) s[f] = convert(s[f]); });
+        // Map generic code/name back to specific keys
+        if (s.code !== undefined) s.expMestSttCode = s.code;
+        if (s.name !== undefined) s.expMestSttName = s.name;
         return s;
       });
     }
@@ -389,6 +408,9 @@ export class IntegrationService implements OnModuleInit {
       result.data = result.data.map((t: any) => {
         if (!t) return t;
         ['id', 'createTime', 'modifyTime'].forEach(f => { if (t[f] !== undefined) t[f] = convert(t[f]); });
+        // Map generic code/name back to specific keys
+        if (t.code !== undefined) t.expMestTypeCode = t.code;
+        if (t.name !== undefined) t.expMestTypeName = t.name;
         return t;
       });
     }
@@ -423,7 +445,7 @@ export class IntegrationService implements OnModuleInit {
     const { expMestId, includeDeleted = false, dataDomainFilter = false, userId } = params;
 
     const result = await firstValueFrom(this.integrationGrpcService.getExpMestById({
-      expMestId,
+      id: expMestId,
       includeDeleted,
       dataDomainFilter,
       userId,
@@ -719,27 +741,27 @@ export class IntegrationService implements OnModuleInit {
     return result;
   }
 
-  async getExpMestMedicinesByIds(
-    expMestIds: number[],
-    includeDeleted: boolean = false,
-    dataDomainFilter: boolean = false,
-    userId?: string
-  ): Promise<{
+  async getExpMestMedicinesByIds(request: {
+    expMestIds: number[];
+    includeDeleted?: boolean;
+    dataDomainFilter?: boolean;
+    userId?: string;
+  }): Promise<{
     success: boolean;
     message?: string;
     data?: any[];
   }> {
     this.logger.info('IntegrationService#getExpMestMedicinesByIds.call', {
-      expMestIdsCount: expMestIds?.length || 0,
-      includeDeleted,
-      dataDomainFilter,
+      expMestIdsCount: request.expMestIds?.length || 0,
+      includeDeleted: request.includeDeleted,
+      dataDomainFilter: request.dataDomainFilter,
     });
     const result = await firstValueFrom(
       this.integrationGrpcService.getExpMestMedicinesByIds({
-        expMestIds: expMestIds || [],
-        includeDeleted,
-        dataDomainFilter,
-        userId,
+        expMestIds: request.expMestIds || [],
+        includeDeleted: request.includeDeleted,
+        dataDomainFilter: request.dataDomainFilter,
+        userId: request.userId,
       })
     ) as any;
     this.logger.info('IntegrationService#getExpMestMedicinesByIds.result', {
@@ -883,7 +905,16 @@ export class IntegrationService implements OnModuleInit {
     userId?: string;
   }): Promise<any> {
     this.logger.info('IntegrationService#getInpatientExpMestById.call', { request });
-    const result = await firstValueFrom(this.integrationGrpcService.getInpatientExpMestById(request)) as any;
+
+    // Map expMestId to id (proto field)
+    const grpcRequest = {
+      id: request.expMestId,
+      userId: request.userId,
+      includeDeleted: request.includeDeleted,
+      dataDomainFilter: request.dataDomainFilter,
+    };
+
+    const result = await firstValueFrom(this.integrationGrpcService.getInpatientExpMestById(grpcRequest)) as any;
     this.logger.info('IntegrationService#getInpatientExpMestById.result', {
       success: result.success,
       hasData: !!result.data,
@@ -939,7 +970,16 @@ export class IntegrationService implements OnModuleInit {
     userId?: string;
   }): Promise<any> {
     this.logger.info('IntegrationService#getInpatientExpMestDetails.call', { request });
-    const result = await firstValueFrom(this.integrationGrpcService.getInpatientExpMestDetails(request)) as any;
+
+    // Map aggrExpMestId to id
+    const grpcRequest = {
+      id: request.aggrExpMestId,
+      userId: request.userId,
+      includeDeleted: request.includeDeleted,
+      dataDomainFilter: request.dataDomainFilter,
+    };
+
+    const result = await firstValueFrom(this.integrationGrpcService.getInpatientExpMestDetails(grpcRequest)) as any;
     this.logger.info('IntegrationService#getInpatientExpMestDetails.result', {
       success: result.success,
       dataCount: result.data?.length || 0,
@@ -1277,6 +1317,64 @@ export class IntegrationService implements OnModuleInit {
     if (result.total !== undefined) result.total = this.convertToNumber(result.total);
 
     return result;
+  }
+
+  async syncInpatientExpMest(expMestId: number, userId: string): Promise<any> {
+    this.logger.info('IntegrationService#syncInpatientExpMest.call', { expMestId, userId });
+    try {
+      const result = await firstValueFrom(this.integrationGrpcService.syncInpatientExpMest({ expMestId, userId })) as any;
+      this.logger.info('IntegrationService#syncInpatientExpMest.result', { success: result.success });
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationService#syncInpatientExpMest.error', { error: error.message });
+      throw error;
+    }
+  }
+
+  async syncExpMestOther(expMestId: number, userId: string): Promise<any> {
+    this.logger.info('IntegrationService#syncExpMestOther.call', { expMestId, userId });
+    try {
+      const result = await firstValueFrom(this.integrationGrpcService.syncExpMestOther({ expMestId, userId })) as any;
+      this.logger.info('IntegrationService#syncExpMestOther.result', { success: result.success });
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationService#syncExpMestOther.error', { error: error.message });
+      throw error;
+    }
+  }
+
+  async getInpatientExpMestSummaryFromHis(expMestId: number, userId: string): Promise<any> {
+    this.logger.info('IntegrationService#getInpatientExpMestSummaryFromHis.call', { expMestId, userId });
+    try {
+      const result = await firstValueFrom(this.integrationGrpcService.getInpatientExpMestSummaryFromHis({ expMestId, userId })) as any;
+      this.logger.info('IntegrationService#getInpatientExpMestSummaryFromHis.result', { success: result.success });
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationService#getInpatientExpMestSummaryFromHis.error', { error: error.message });
+      throw error;
+    }
+  }
+
+  async enrichExpMestsWithSyncStatus(expMestIds: number[], expMestType: string, userId?: string): Promise<any> {
+    this.logger.info('IntegrationService#enrichExpMestsWithSyncStatus.call', { count: expMestIds.length, expMestType });
+    try {
+      const result = await firstValueFrom(this.integrationGrpcService.enrichExpMestsWithSyncStatus({ expMestIds, expMestType })) as any;
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationService#enrichExpMestsWithSyncStatus.error', { error: error.message });
+      throw error;
+    }
+  }
+
+  async autoUpdateExpMestSttId(expMestIds: number[], expMestType: string, userId: string): Promise<any> {
+    this.logger.info('IntegrationService#autoUpdateExpMestSttId.call', { count: expMestIds.length, expMestType });
+    try {
+      const result = await firstValueFrom(this.integrationGrpcService.autoUpdateExpMestSttId({ expMestIds, expMestType, userId })) as any;
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationService#autoUpdateExpMestSttId.error', { error: error.message });
+      throw error;
+    }
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
 import { AuthModule } from '../auth/auth.module';  // Import AuthModule
@@ -14,7 +15,7 @@ import { AuthModule } from '../auth/auth.module';  // Import AuthModule
                 transport: Transport.GRPC,
                 options: {
                     package: 'attendance',
-                    protoPath: join(__dirname, '../_proto/attendance.proto'),
+                    protoPath: PROTO_PATH.attendance,
                     url: `${process.env.ATTENDANCE_SVC_URL || 'localhost'}:${process.env.ATTENDANCE_SVC_PORT || 50057}`,
                     loader: {
                         keepCase: true,
@@ -22,7 +23,8 @@ import { AuthModule } from '../auth/auth.module';  // Import AuthModule
                         enums: String,
                         defaults: true,
                         oneofs: true,
-                        includeDirs: [join(__dirname, '../_proto')],
+                        includeDirs: [PROTO_ROOT_DIR],
+
                     },
                 },
             },

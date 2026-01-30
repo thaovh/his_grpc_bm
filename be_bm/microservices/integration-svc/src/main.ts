@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
@@ -11,11 +11,12 @@ async function bootstrap() {
     options: {
       url: `${process.env.URL || '0.0.0.0'}:${process.env.PORT || '50053'}`,
       package: 'integration',
-      protoPath: join(__dirname, './_proto/integration.proto'),
+      protoPath: PROTO_PATH.integration,
       loader: {
         enums: String,
         objects: true,
         arrays: true,
+        includeDirs: [PROTO_ROOT_DIR],
       },
     },
   });

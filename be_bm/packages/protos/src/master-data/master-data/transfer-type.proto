@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package master_data;
+
+import "common/commons.proto";
+
+message TransferType {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+  int32 version = 7;
+  int32 isActive = 8;
+}
+
+message CreateTransferTypeInput {
+  string code = 1;
+  string name = 2;
+  int32 sortOrder = 3;
+}
+
+message UpdateTransferTypeInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+}
+
+message TransferTypeList {
+  repeated TransferType data = 1;
+}

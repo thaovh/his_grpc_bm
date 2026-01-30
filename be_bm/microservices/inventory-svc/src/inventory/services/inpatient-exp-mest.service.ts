@@ -180,9 +180,6 @@ export class InpatientExpMestService {
     // Use transaction to ensure all-or-nothing
     return await this.dataSource.transaction(async (manager) => {
       try {
-        console.log('=== [SyncAllInTransaction] STARTED ===');
-        console.log(`Transaction Data: ParentID=${data.parentData.id}, Children=${data.childrenData?.length}, Medicines=${data.medicinesData?.length}`);
-
         // 1. Sync phiếu cha
         const parent = await this.syncFromIntegrationApi(
           data.parentData,
@@ -212,7 +209,6 @@ export class InpatientExpMestService {
         } else {
           // Case: Single ExpMest (No children). Generate a default Child from Parent Data.
           // This ensures that medicines (which link to Child ID) can be saved and retrieved.
-          console.log('[SyncAllInTransaction] No childrenData. Creating default child from ParentData for Single ExpMest.');
           try {
             const child = await this.childService.syncFromIntegrationApi(
               data.parentData,
@@ -236,8 +232,14 @@ export class InpatientExpMestService {
           for (const medicineData of data.medicinesData) {
             // Tìm child tương ứng với medicine này
             const childExpMestId = medicineData.expMestId || medicineData.EXP_MEST_ID;
-            const child = children.find(c => c.hisExpMestId === childExpMestId);
-            const childHisData = childrenDataMap.get(childExpMestId);
+            let child = children.find(c => c.hisExpMestId === childExpMestId);
+            let childHisData = childrenDataMap.get(childExpMestId);
+
+            // Fallback: If not found and there is only one child (Single ExpMest case), use that child
+            if (!child && children.length === 1) {
+              child = children[0];
+              childHisData = childrenDataMap.get(child.hisExpMestId);
+            }
 
             if (child && childHisData) {
 
@@ -291,6 +293,12 @@ export class InpatientExpMestService {
                 manager, // Pass transaction manager
               );
               medicines.push(medicine);
+            } else {
+              this.logger.warn('Skipping medicine sync: Child ExpMest not found', {
+                medicineExpMestId: childExpMestId,
+                parentExpMestId: data.parentData.id,
+                childrenCount: children.length
+              });
             }
           }
         }
@@ -301,8 +309,6 @@ export class InpatientExpMestService {
           medicines
         };
       } catch (error: any) {
-        console.error('=== [SyncAllInTransaction] FAILED ===');
-        console.error(error);
         this.logger.error('InpatientExpMestService#syncAllInTransaction.error', {
           error: error.message,
           stack: error.stack,

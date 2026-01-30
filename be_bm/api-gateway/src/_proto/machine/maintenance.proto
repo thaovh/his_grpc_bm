@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package machine;
+
+message MaintenanceRecord {
+    string id = 1;
+    string machineId = 2;
+    string maintenanceTypeId = 3;
+    string date = 4;
+    string performer = 5;
+    string description = 6;
+    double cost = 7;
+    string nextMaintenanceDate = 8;
+    string createdAt = 9;
+    string updatedAt = 10;
+    string createdBy = 11;
+    string updatedBy = 12;
+    int32 version = 13;
+    int32 isActive = 14;
+}
+
+message MaintenanceRecordList {
+    repeated MaintenanceRecord data = 1;
+}
+
+message CreateMaintenanceRecordInput {
+    string machineId = 1;
+    string maintenanceTypeId = 2;
+    string date = 3;
+    string performer = 4;
+    string description = 5;
+    double cost = 6;
+    string nextMaintenanceDate = 7;
+    string createdBy = 8;
+}
+
+message UpdateMaintenanceRecordInput {
+    string id = 1;
+    string machineId = 2;
+    string maintenanceTypeId = 3;
+    string date = 4;
+    string performer = 5;
+    string description = 6;
+    double cost = 7;
+    string nextMaintenanceDate = 8;
+    string updatedBy = 9;
+}

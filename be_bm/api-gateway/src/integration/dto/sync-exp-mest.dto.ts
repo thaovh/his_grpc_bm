@@ -8,7 +8,7 @@ import { Type } from 'class-transformer';
  * All fields are optional to match CreateExpMestDto structure
  */
 export class SyncExpMestExpMestDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'ExpMest ID (will be ignored, taken from URL param instead)',
     example: 17966655,
   })
@@ -291,7 +291,7 @@ export class SyncExpMestExpMestDto {
   @IsString()
   patientTypeCode?: string | null;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '123e4567-e89b-12d3-a456-426614174000',
     description: 'Reference to MST_EXPORT_STATUS.id (local DB)'
   })
@@ -314,5 +314,21 @@ export class SyncExpMestBodyDto {
   @ValidateNested()
   @Type(() => SyncExpMestExpMestDto)
   expMest?: SyncExpMestExpMestDto;
+}
+
+export class SyncExpMestRequestDto {
+  @ApiPropertyOptional({ example: 123456 })
+  @IsNumber()
+  expMestId: number;
+}
+
+export class AutoUpdateExpMestSttIdDto {
+  @ApiPropertyOptional({ example: [123, 456] })
+  @IsNumber({}, { each: true })
+  expMestIds: number[];
+
+  @ApiPropertyOptional({ example: 'inpatient' })
+  @IsString()
+  expMestType: string;
 }
 

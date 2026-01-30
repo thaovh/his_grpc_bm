@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package machine;
+
+message MachineDocument {
+    string id = 1;
+    string machineId = 2;
+    string type = 3;
+    string fileName = 4;
+    string fileUrl = 5;
+    string description = 6;
+    string createdAt = 7;
+    string updatedAt = 8;
+    string createdBy = 9;
+    string updatedBy = 10;
+    int32 version = 11;
+    int32 isActive = 12;
+}
+
+message MachineDocumentList {
+    repeated MachineDocument data = 1;
+}
+
+message CreateMachineDocumentInput {
+    string machineId = 1;
+    string type = 2;
+    string fileName = 3;
+    string fileUrl = 4;
+    string description = 5;
+    string createdBy = 6;
+}
+
+message UpdateMachineDocumentInput {
+    string id = 1;
+    string machineId = 2;
+    string type = 3;
+    string fileName = 4;
+    string fileUrl = 5;
+    string description = 6;
+    string updatedBy = 7;
+}

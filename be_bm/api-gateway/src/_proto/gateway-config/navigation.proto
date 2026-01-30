@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package gateway_config;
+
+message GetNavigationTreeRequest {
+  repeated string role_codes = 1;
+}
+
+message GetAppFeaturesRequest {
+  optional string parent_id = 1;
+  optional bool is_active = 2;
+}
+
+message CreateAppFeatureRequest {
+  string code = 1;
+  string name = 2;
+  optional string icon = 3;
+  optional string route = 4;
+  optional string parent_id = 5;
+  int32 order_index = 6;
+  repeated string role_codes = 7;
+}
+
+message UpdateAppFeatureRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string icon = 3;
+  optional string route = 4;
+  optional string parent_id = 5;
+  optional int32 order_index = 6;
+  optional bool is_active = 7;
+  repeated string role_codes = 8;
+}
+
+message DeleteAppFeatureRequest {
+  string id = 1;
+}
+
+message AppFeatureResponse {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string icon = 4;
+  string route = 5;
+  string parent_id = 6;
+  int32 order_index = 7;
+  bool is_active = 8;
+  repeated string role_codes = 9;
+  repeated AppFeatureResponse children = 10;
+}
+
+message AppFeaturesResponse {
+  repeated AppFeatureResponse features = 1;
+}
+
+message NavigationTreeResponse {
+  repeated AppFeatureResponse menu = 1;
+}

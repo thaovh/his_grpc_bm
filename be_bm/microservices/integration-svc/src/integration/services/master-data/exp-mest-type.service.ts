@@ -30,7 +30,13 @@ export class ExpMestTypeService {
       const cached = await this.redisService.getExpMestType();
       if (cached && cached.length > 0) {
         this.logger.info('ExpMestTypeService#getExpMestType.cacheHit', { count: cached.length });
-        const data = cached.map((t: any) => this.convertExpMestTypeNumberFields(t));
+        const data = cached.map((t: any) => {
+          const converted = this.convertExpMestTypeNumberFields(t);
+          // Handle legacy cache structure
+          if (!converted.code && converted.expMestTypeCode) converted.code = converted.expMestTypeCode;
+          if (!converted.name && converted.expMestTypeName) converted.name = converted.expMestTypeName;
+          return converted;
+        });
         return { success: true, data };
       }
 
@@ -84,8 +90,8 @@ export class ExpMestTypeService {
         modifyTime: t.MODIFY_TIME,
         isActive: t.IS_ACTIVE,
         isDelete: t.IS_DELETE,
-        expMestTypeCode: t.EXP_MEST_TYPE_CODE,
-        expMestTypeName: t.EXP_MEST_TYPE_NAME,
+        code: t.EXP_MEST_TYPE_CODE,
+        name: t.EXP_MEST_TYPE_NAME,
       }));
 
       await this.redisService.setExpMestType(mapped, 86400);

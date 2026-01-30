@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package inventory;
 
-import "commons.proto";
+import "./commons.proto";
 import "inventory/exp-mest.proto";
 import "inventory/exp-mest-cabinet.proto";
 import "inventory/inpatient.proto";

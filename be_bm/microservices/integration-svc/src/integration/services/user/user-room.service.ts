@@ -7,7 +7,7 @@ import { RedisService } from '../redis.service';
 import { UserRoom } from '../../integration.interface';
 
 interface UsersGrpcService {
-  FindById(data: { id: string }): any;
+  findById(data: { id: string }): any;
 }
 
 @Injectable()
@@ -58,7 +58,7 @@ export class UserRoomService {
       console.log(`UserRoomService#getUserRooms calling usersGrpcService.findById with id: "${safeUserId}"`);
       try {
         user = await firstValueFrom(
-          this.usersGrpcService.FindById({ id: safeUserId })
+          this.usersGrpcService.findById({ id: safeUserId })
         );
         console.log(`UserRoomService#getUserRooms user found:`, user ? 'yes' : 'no', user?.username);
       } catch (userError: any) {
@@ -234,7 +234,7 @@ export class UserRoomService {
       console.log(`UserRoomService#reloadUserRooms calling usersGrpcService.findById with id: "${safeUserId}"`);
       try {
         user = await firstValueFrom(
-          this.usersGrpcService.FindById({ id: safeUserId })
+          this.usersGrpcService.findById({ id: safeUserId })
         );
         console.log(`UserRoomService#reloadUserRooms user found:`, user ? 'yes' : 'no');
       } catch (userError: any) {

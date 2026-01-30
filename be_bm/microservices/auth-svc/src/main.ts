@@ -1,9 +1,12 @@
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
+import * as path from 'path';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { GlobalRpcExceptionFilter } from './commons/filters/rpc-exception.filter';
+
+
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice(AppModule, {
@@ -11,11 +14,12 @@ async function bootstrap() {
     options: {
       url: `${process.env.URL || '0.0.0.0'}:${process.env.PORT || '50052'}`,
       package: 'auth',
-      protoPath: join(__dirname, './_proto/auth.proto'),
+      protoPath: PROTO_PATH.auth,
       loader: {
         enums: String,
         objects: true,
         arrays: true,
+        includeDirs: [PROTO_ROOT_DIR],
       },
     },
   });

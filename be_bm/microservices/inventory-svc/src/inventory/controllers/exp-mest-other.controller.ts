@@ -76,7 +76,7 @@ export class ExpMestOtherController {
 
     const result: ExpMestOther[] = await this.expMestOtherService.findByHisExpMestIds(hisExpMestIds);
 
-    result.forEach(item => this.convertLongToNumber(result));
+    result.forEach(item => this.convertLongToNumber(item));
     this.logger.info('ExpMestOtherController#findExpMestOthersByHisIds.result', {
       requested: hisExpMestIds.length,
       found: result.length

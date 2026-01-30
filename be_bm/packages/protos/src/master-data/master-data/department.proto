@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package master_data;
+
+import "common/commons.proto";
+import "master-data/master-data/branch.proto";
+import "master-data/master-data/department-type.proto";
+
+// Department - Khoa/Phòng
+message Department {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string parentId = 4;
+  string branchId = 5;
+  string departmentTypeId = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+  string createdBy = 9;
+  string updatedBy = 10;
+  int32 version = 11;
+  int32 isActive = 12;
+  Branch branch = 13;
+  DepartmentType departmentType = 14;
+  Department parent = 15;
+  repeated Department children = 16;
+  int64 hisId = 17;
+  int32 isAssetManagement = 18;
+}
+
+message CreateDepartmentInput {
+  string code = 1;
+  string name = 2;
+  string parentId = 3;
+  string branchId = 4;
+  string departmentTypeId = 5;
+  string createdBy = 6;
+  int64 hisId = 7;
+  int32 isAssetManagement = 8;
+}
+
+message UpdateDepartmentInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string parentId = 4;
+  string branchId = 5;
+  string departmentTypeId = 6;
+  string updatedBy = 7;
+  int64 hisId = 8;
+  int32 isAssetManagement = 9;
+}
+
+message DepartmentList {
+  repeated Department data = 1;
+}

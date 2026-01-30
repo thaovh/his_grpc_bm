@@ -1275,6 +1275,9 @@ export class HisProvider {
         dataCount: response.data?.Data?.length || 0,
         firstSample: response.data?.Data?.[0],
       });
+      if (response.data?.Data?.length > 0) {
+        console.log('🔍 [HIS Provider] First ExpMestStt Item:', JSON.stringify(response.data.Data[0], null, 2));
+      }
 
       if (!response.data) {
         throw new Error('Get exp mest statuses failed: No response data');
@@ -1780,22 +1783,6 @@ export class HisProvider {
       // Parse response manually to preserve large number precision
       let responseData: HisExpMestResponse;
       try {
-        // Log raw response sample to debug
-        const sampleLength = Math.min(1000, response.data.length);
-        // Find first occurrence of VIR_CREATE_MONTH in response
-        const virCreateMonthIndex = response.data.indexOf('"VIR_CREATE_MONTH"');
-        let virCreateMonthSample = '';
-        if (virCreateMonthIndex >= 0) {
-          const start = Math.max(0, virCreateMonthIndex - 50);
-          const end = Math.min(response.data.length, virCreateMonthIndex + 100);
-          virCreateMonthSample = response.data.substring(start, end);
-        }
-        this.logger.info('HisProvider#getInpatientExpMests.rawResponseSample', {
-          sample: response.data.substring(0, sampleLength),
-          hasVirCreateMonth: response.data.includes('VIR_CREATE_MONTH'),
-          virCreateMonthSample,
-          virCreateMonthIndex,
-        });
 
         // Preserve VIR_CREATE_MONTH as string before JSON.parse to avoid precision loss
         // Pattern: "VIR_CREATE_MONTH": 20251200000000.0 -> "VIR_CREATE_MONTH": "20251200000000"
@@ -2113,6 +2100,10 @@ export class HisProvider {
         expMestId,
       });
 
+      console.log('=== HIS RESPONSE DEBUG: getExpMestMedicines (Single) ===');
+      console.log(JSON.stringify(response.data));
+      console.log('========================================================');
+
       return response.data;
     } catch (error: any) {
       this.logger.error('HisProvider#getExpMestMedicines.error', {
@@ -2409,21 +2400,6 @@ export class HisProvider {
       const fullUrl = `${baseUrl}${endpoint}?param=${paramEncoded}`;
 
       // Log request details
-      console.log('=== HIS GetExpMestById API Request ===');
-      console.log('Method: GET');
-      console.log('URL:', fullUrl);
-      console.log('Base URL:', baseUrl);
-      console.log('Endpoint:', endpoint);
-      console.log('Headers:', {
-        'Content-Type': 'application/json',
-        'TokenCode': tokenCode?.substring(0, 30) + '...',
-        'ApplicationCode': 'HIS',
-      });
-      console.log('Param JSON:', JSON.stringify(paramObject, null, 2));
-      console.log('Param Base64:', paramBase64);
-      console.log('ExpMestId:', expMestId);
-      console.log('===================================');
-
       this.logger.info('HisProvider#getExpMestById.request', {
         method: 'GET',
         url: fullUrl,
@@ -2733,6 +2709,10 @@ export class HisProvider {
         throw new Error(`Get inpatient exp mest details failed: ${responseData.Param?.Messages?.join(', ') || 'API returned unsuccessful response'}`);
       }
 
+      console.log('=== HIS RESPONSE DEBUG: getInpatientExpMestDetails ===');
+      console.log(JSON.stringify(responseData));
+      console.log('==========================================');
+
       return responseData;
     } catch (error: any) {
       this.logger.error('HisProvider#getInpatientExpMestDetails.error', {
@@ -2824,6 +2804,12 @@ export class HisProvider {
       });
 
       const response = await axiosInstance.post<UpdateWorkInfoResponse>(endpoint, paramObject);
+
+      console.log('=== HIS UpdateWorkInfo API Response ===');
+      console.log('Status:', response.status);
+      console.log('Success:', response.data.Success);
+      console.log('Response Data:', JSON.stringify(response.data, null, 2));
+      console.log('=======================================');
 
       this.logger.info('HisProvider#updateWorkInfo.response', {
         status: response.status,

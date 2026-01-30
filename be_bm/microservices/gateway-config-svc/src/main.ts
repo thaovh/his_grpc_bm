@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
@@ -13,14 +13,15 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'gateway_config',
-      protoPath: join(__dirname, '_proto/gateway-config.proto'),
+      protoPath: PROTO_PATH.gatewayConfig,
       url: `0.0.0.0:${grpcPort}`,
       loader: {
         keepCase: true,
         enums: String,
-        objects: true,
+        oneofs: true,
+        includeDirs: [PROTO_ROOT_DIR],
         arrays: true,
-        include: [join(__dirname, '_proto')],
+
       },
     },
   });

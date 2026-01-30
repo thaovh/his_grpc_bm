@@ -396,7 +396,6 @@ export class InventoryController {
         if (childrenResult.success && childrenResult.data && Array.isArray(childrenResult.data)) {
           childrenData = childrenResult.data;
         }
-        console.log('childrenData count:', childrenData.length);
       } catch (error: any) {
         console.error('step2 error:', error);
       }
@@ -424,20 +423,27 @@ export class InventoryController {
 
         console.log('expMestIds for medicines:', expMestIds);
 
-        const medicinesResult = await this.integrationService.getExpMestMedicinesByIds(
+        const medicinesResult = await this.integrationService.getExpMestMedicinesByIds({
           expMestIds,
-          false, // includeDeleted
-          false, // dataDomainFilter
-          req.user?.id // Pass userId here
-        ).catch((error: any) => {
+          includeDeleted: false,
+          dataDomainFilter: false,
+          userId: req.user?.id
+        }).catch((error: any) => {
           console.error('getExpMestMedicinesByIds error:', error);
           return { success: false, data: [] };
         });
 
         console.log('medicinesResult success:', medicinesResult.success);
-        console.log('medicinesResult message:', (medicinesResult as any).message);
+        console.log('medicinesResult keys:', Object.keys(medicinesResult));
+        console.log('medicinesResult data type:', typeof medicinesResult.data);
+        console.log('medicinesResult data isArray:', Array.isArray(medicinesResult.data));
+        console.log('medicinesResult data length:', medicinesResult.data?.length);
+
         if (medicinesResult.success && medicinesResult.data && Array.isArray(medicinesResult.data)) {
           medicinesData = medicinesResult.data;
+          if (medicinesData.length > 0) {
+            console.log('First medicine sample:', JSON.stringify(medicinesData[0]).substring(0, 100));
+          }
         }
         console.log('medicinesData count:', medicinesData.length);
       } catch (error: any) {
@@ -709,6 +715,9 @@ export class InventoryController {
         console.warn('Exception getting medicines:', error?.message);
         // Ignore
       }
+
+
+
       const result = await this.inventoryService.syncAllExpMestOther({
         parentData,
         medicinesData: medicinesData.length > 0 ? medicinesData : undefined,
@@ -728,6 +737,12 @@ export class InventoryController {
 
       // Emit event khi sync thành công (REUSE SAME TOPIC as Inpatient)
       try {
+        console.log('=== [DEBUG-EVENT] Starting event emission logic ===');
+        console.log('result.parent:', result.parent ? 'Has Data' : 'Null');
+        if (result.parent) {
+          console.log('result.parent.workingStateId:', result.parent.workingStateId);
+        }
+
         // Enrich với thông tin từ local DB (vừa sync xong)
         // Get working state info
         let workingStateId: string | null = null;
@@ -736,13 +751,16 @@ export class InventoryController {
         if (result.parent?.workingStateId) {
           workingStateId = result.parent.workingStateId;
           try {
+            console.log('Fetching working state from MasterData for:', workingStateId);
             working_state = await this.masterDataService.findExportStatusById(workingStateId).catch(() => null);
+            console.log('Fetched working_state:', working_state ? 'Success' : 'Failed/Null');
           } catch (e) {
-            // Ignore
+            console.warn('[DEBUG-EVENT] Failed to fetch working state:', e);
           }
         } else {
           // Use default if not synced (should not happen here as we just synced, but for safety)
           const defaultWorkingStateId = this.configService.get<string>('DEFAULT_NOT_SYNC_EXPORT_STATUS_ID') || null;
+          console.log('[DEBUG-EVENT] No workingStateId in parent, checks default:', defaultWorkingStateId);
           if (defaultWorkingStateId) {
             workingStateId = defaultWorkingStateId;
             try {
@@ -773,9 +791,12 @@ export class InventoryController {
           expMestId: expMestIdNumber
         });
 
-        this.eventEmitter.emit('inpatient.exp-mest.synced', syncEventPayload);
+        console.log('=== [DEBUG-EVENT] Emitting event: inpatient.exp-mest.synced ===');
+        const emitResult = this.eventEmitter.emit('inpatient.exp-mest.synced', syncEventPayload);
+        console.log('=== [DEBUG-EVENT] Emit Result:', emitResult);
 
       } catch (eventError: any) {
+        console.error('=== [DEBUG-EVENT] Error in event block:', eventError);
         this.logger.error('InventoryController#syncExpMestOther.eventError', {
           error: eventError?.message
         });
@@ -1232,148 +1253,36 @@ export class InventoryController {
       console.log('result:', JSON.stringify(result, null, 2));
 
       // Emit SSE event với đầy đủ thông tin summary sau khi update thành công
-      console.log('=== [SSE DEBUG] InventoryController#updateExportFields.startEmitEvent ===');
-      console.log('hisIds:', JSON.stringify(body.hisIds, null, 2));
-      console.log('hisIdsCount:', body.hisIds?.length || 0);
-      console.log('userId:', req.user.id);
-
-      try {
-        if (body.hisIds && body.hisIds.length > 0) {
-          // Cách hiệu quả hơn: Query trực tiếp medicine by hisId
+      if (body.hisIds && body.hisIds.length > 0) {
+        try {
           const firstHisId = body.hisIds[0];
-          console.log('=== [SSE DEBUG] Querying medicine by hisId ===');
-          console.log('firstHisId:', firstHisId);
+          const medicine = await this.inventoryService.findInpatientExpMestMedicineByHisId(firstHisId).catch(() => null);
 
-          try {
-            // Query medicine trực tiếp bằng hisId
-            const medicine = await this.inventoryService.findInpatientExpMestMedicineByHisId(firstHisId).catch((error: any) => {
-              console.error('=== [SSE DEBUG] findMedicineByHisIdError ===');
-              console.error('hisId:', firstHisId);
-              console.error('error:', error?.message);
-              return null;
-            });
+          if (medicine && medicine.inpatientExpMestId) {
+            const child = await this.inventoryService.findInpatientExpMestChildByHisId(medicine.inpatientExpMestId).catch(() => null);
 
-            if (medicine) {
-              console.log('=== [SSE DEBUG] Medicine found ===');
-              console.log('medicine object keys:', Object.keys(medicine));
-              console.log('medicine full object:', JSON.stringify(medicine, null, 2));
-              console.log('medicine.inpatientExpMestId:', medicine.inpatientExpMestId);
-              console.log('medicine.inpatientExpMestId type:', typeof medicine.inpatientExpMestId);
-              console.log('medicine.inpatientExpMestId === undefined:', medicine.inpatientExpMestId === undefined);
-              console.log('medicine.inpatientExpMestId === null:', medicine.inpatientExpMestId === null);
+            if (child && child.aggrExpMestId) {
+              const aggrExpMestId = child.aggrExpMestId;
+              const summaryResponse = await this.getInpatientExpMestSummary(aggrExpMestId.toString()).catch(() => null);
 
-              if (medicine.inpatientExpMestId) {
-                console.log('=== [SSE DEBUG] Querying child by hisExpMestId ===');
-                console.log('inpatientExpMestId:', medicine.inpatientExpMestId);
+              if (summaryResponse) {
+                const eventPayload = {
+                  expMestId: aggrExpMestId,
+                  expMestCode: summaryResponse.expMestCode || '',
+                  userId: req.user.id,
+                  timestamp: Date.now(),
+                  data: summaryResponse,
+                };
 
-                // Query child record để lấy aggrExpMestId
-                const child = await this.inventoryService.findInpatientExpMestChildByHisId(medicine.inpatientExpMestId).catch((error: any) => {
-                  console.error('=== [SSE DEBUG] findChildByHisIdError ===');
-                  console.error('inpatientExpMestId:', medicine.inpatientExpMestId);
-                  console.error('error:', error?.message);
-                  return null;
-                });
-
-                if (child && child.aggrExpMestId) {
-                  const aggrExpMestId = child.aggrExpMestId;
-                  console.log('=== [SSE DEBUG] Child found ===');
-                  console.log('child:', JSON.stringify({
-                    hisExpMestId: child.hisExpMestId,
-                    aggrExpMestId: child.aggrExpMestId,
-                    expMestCode: child.expMestCode,
-                  }, null, 2));
-                  console.log('=== [SSE DEBUG] aggrExpMestId FOUND ===');
-                  console.log('aggrExpMestId:', aggrExpMestId);
-
-                  // Fetch summary data giống như API GET /api/inventory/inpatient-exp-mests/{expMestId}/summary
-                  try {
-                    console.log('=== [SSE DEBUG] Fetching summary ===');
-                    console.log('aggrExpMestId:', aggrExpMestId);
-
-                    const summaryResponse = await this.getInpatientExpMestSummary(
-                      aggrExpMestId.toString(),
-                      undefined, // orderBy - use default
-                    );
-
-                    console.log('=== [SSE DEBUG] Summary fetched ===');
-                    console.log('hasData:', !!summaryResponse?.data);
-                    console.log('expMestCode:', summaryResponse?.data?.expMestCode);
-                    console.log('medicinesCount:', summaryResponse?.data?.medicines?.length || 0);
-
-                    if (summaryResponse?.data) {
-                      const eventPayload = {
-                        expMestId: aggrExpMestId,
-                        expMestCode: summaryResponse.data.expMestCode || '',
-                        userId: req.user.id,
-                        timestamp: Date.now(),
-                        data: summaryResponse.data, // Đầy đủ thông tin summary
-                      };
-
-                      console.log('=== [SSE DEBUG] Emitting event ===');
-                      console.log('eventType: inpatient.exp-mest.medicines.exported');
-                      console.log('payload:', JSON.stringify({
-                        expMestId: eventPayload.expMestId,
-                        expMestCode: eventPayload.expMestCode,
-                        userId: eventPayload.userId,
-                        timestamp: eventPayload.timestamp,
-                        hasData: !!eventPayload.data,
-                        medicinesCount: eventPayload.data?.medicines?.length || 0,
-                      }, null, 2));
-
-                      this.eventEmitter.emit('inpatient.exp-mest.medicines.exported', eventPayload);
-
-                      console.log('=== [SSE DEBUG] Event EMITTED successfully ===');
-
-                      // Check if WORKING_STATE_ID has changed and emit stt-updated event if needed
-                      console.log('=== [SSE DEBUG] updateExportFields: Calling checkAndEmitWorkingStateUpdate ===');
-                      console.log('aggrExpMestId:', aggrExpMestId);
-                      await this.checkAndEmitWorkingStateUpdate(aggrExpMestId);
-                      console.log('=== [SSE DEBUG] updateExportFields: checkAndEmitWorkingStateUpdate completed ===');
-                    } else {
-                      console.warn('=== [SSE DEBUG] No summary data ===');
-                      console.log('summaryResponse:', JSON.stringify(summaryResponse, null, 2));
-                    }
-                  } catch (error: any) {
-                    console.error('=== [SSE DEBUG] Summary error ===');
-                    console.error('aggrExpMestId:', aggrExpMestId);
-                    console.error('error:', error?.message);
-                    console.error('stack:', error?.stack);
-                  }
-                } else {
-                  console.warn('=== [SSE DEBUG] Child not found or no aggrExpMestId ===');
-                  console.log('child:', child ? JSON.stringify({
-                    hisExpMestId: child.hisExpMestId,
-                    aggrExpMestId: child.aggrExpMestId,
-                  }, null, 2) : 'null');
-                }
-              } else {
-                console.warn('=== [SSE DEBUG] Medicine has no inpatientExpMestId ===');
-                console.log('medicine:', JSON.stringify({
-                  hisId: medicine.hisId,
-                  inpatientExpMestId: medicine.inpatientExpMestId,
-                }, null, 2));
+                this.eventEmitter.emit('inpatient.exp-mest.medicines.exported', eventPayload);
+                await this.checkAndEmitWorkingStateUpdate(aggrExpMestId);
               }
-            } else {
-              console.warn('=== [SSE DEBUG] Medicine not found ===');
-              console.log('hisId:', firstHisId);
             }
-          } catch (error: any) {
-            console.error('=== [SSE DEBUG] Medicine query error ===');
-            console.error('error:', error?.message);
-            console.error('stack:', error?.stack);
           }
-        } else {
-          console.warn('=== [SSE DEBUG] No hisIds ===');
-          console.log('body:', JSON.stringify(body, null, 2));
+        } catch (error) {
+          this.logger.error('InventoryController#updateExportFields.emitEventError', { error: error.message });
         }
-      } catch (error: any) {
-        // Log error nhưng không fail request
-        console.error('=== [SSE DEBUG] eventEnrichError ===');
-        console.error('error:', error?.message);
-        console.error('stack:', error?.stack);
       }
-
-      console.log('=== [SSE DEBUG] InventoryController#updateExportFields.endEmitEvent ===');
 
       return {
         statusCode: 200,
@@ -1523,12 +1432,6 @@ export class InventoryController {
     @Body() body: BatchUpdateActualExportFieldsDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<any> {
-    console.log('=== [SSE DEBUG] updateActualExportFields.START ===');
-    console.log('hisIds:', JSON.stringify(body.hisIds, null, 2));
-    console.log('hisIdsCount:', body.hisIds?.length || 0);
-    console.log('actualExportTime:', body.actualExportTime);
-    console.log('userId:', req.user?.id);
-
     this.logger.info('InventoryController#updateActualExportFields.call', {
       hisIdsCount: body.hisIds?.length || 0,
       actualExportTime: body.actualExportTime,
@@ -1541,92 +1444,44 @@ export class InventoryController {
       }
 
       if (!body.hisIds || body.hisIds.length === 0) {
-        throw new BadRequestException('hisIds is required and must not be empty');
+        throw new BadRequestException('hisIds is required');
       }
 
-      console.log('=== [SSE DEBUG] updateActualExportFields: Calling updateActualExportFieldsByHisIds ===');
       const result = await this.inventoryService.updateActualExportFieldsByHisIds(
         body.hisIds,
         body.actualExportTime ?? null,
         req.user.id,
       );
-      console.log('=== [SSE DEBUG] updateActualExportFields: updateActualExportFieldsByHisIds completed ===');
-      console.log('result:', JSON.stringify(result, null, 2));
 
-      // Emit SSE event với summary data (giống như updateExportFields)
-      // Frontend sẽ nhận cùng event để update cả export và actual export status
+      // Emit SSE event
       if (body.hisIds && body.hisIds.length > 0) {
         try {
           const firstHisId = body.hisIds[0];
-          const medicine = await this.inventoryService.findInpatientExpMestMedicineByHisId(firstHisId).catch((error: any) => {
-            this.logger.warn('InventoryController#updateActualExportFields.findMedicineError', {
-              hisId: firstHisId,
-              error: error?.message,
-            });
-            return null;
-          });
+          const medicine = await this.inventoryService.findInpatientExpMestMedicineByHisId(firstHisId).catch(() => null);
 
           if (medicine && medicine.inpatientExpMestId) {
-            // Query child record để lấy aggrExpMestId
-            const child = await this.inventoryService.findInpatientExpMestChildByHisId(medicine.inpatientExpMestId).catch((error: any) => {
-              this.logger.warn('InventoryController#updateActualExportFields.findChildError', {
-                inpatientExpMestId: medicine.inpatientExpMestId,
-                error: error?.message,
-              });
-              return null;
-            });
+            const child = await this.inventoryService.findInpatientExpMestChildByHisId(medicine.inpatientExpMestId).catch(() => null);
 
             if (child && child.aggrExpMestId) {
               const aggrExpMestId = child.aggrExpMestId;
+              const summaryResponse = await this.getInpatientExpMestSummary(aggrExpMestId.toString()).catch(() => null);
 
-              // Fetch summary data giống như API GET /api/inventory/inpatient-exp-mests/{expMestId}/summary
-              try {
-                const summaryResponse = await this.getInpatientExpMestSummary(
-                  aggrExpMestId.toString(),
-                  undefined, // orderBy - use default
-                );
+              if (summaryResponse) {
+                const eventPayload = {
+                  expMestId: aggrExpMestId,
+                  expMestCode: summaryResponse.expMestCode || '',
+                  userId: req.user.id,
+                  timestamp: Date.now(),
+                  data: summaryResponse,
+                };
 
-                if (summaryResponse?.data) {
-                  const eventPayload = {
-                    expMestId: aggrExpMestId,
-                    expMestCode: summaryResponse.data.expMestCode || '',
-                    userId: req.user.id,
-                    timestamp: Date.now(),
-                    data: summaryResponse.data, // Đầy đủ thông tin summary (có cả export và actual export)
-                  };
-
-                  this.logger.info('InventoryController#updateActualExportFields.emittingSSE', {
-                    eventType: 'inpatient.exp-mest.medicines.exported',
-                    expMestId: aggrExpMestId,
-                    expMestCode: eventPayload.expMestCode,
-                    medicinesCount: summaryResponse.data.medicines?.length || 0,
-                  });
-
-                  // Emit cùng event như updateExportFields
-                  this.eventEmitter.emit('inpatient.exp-mest.medicines.exported', eventPayload);
-
-                  // Check if WORKING_STATE_ID has changed and emit stt-updated event if needed
-                  console.log('=== [SSE DEBUG] updateActualExportFields: Calling checkAndEmitWorkingStateUpdate ===');
-                  console.log('aggrExpMestId:', aggrExpMestId);
-                  await this.checkAndEmitWorkingStateUpdate(aggrExpMestId);
-                  console.log('=== [SSE DEBUG] updateActualExportFields: checkAndEmitWorkingStateUpdate completed ===');
-                }
-              } catch (error: any) {
-                this.logger.error('InventoryController#updateActualExportFields.summaryError', {
-                  aggrExpMestId,
-                  error: error?.message,
-                  stack: error?.stack,
-                });
-                // Không throw error, chỉ log vì update đã thành công
+                this.eventEmitter.emit('inpatient.exp-mest.medicines.exported', eventPayload);
+                await this.checkAndEmitWorkingStateUpdate(aggrExpMestId);
               }
             }
           }
-        } catch (error: any) {
-          this.logger.error('InventoryController#updateActualExportFields.sseError', {
-            error: error?.message,
-            stack: error?.stack,
-          });
-          // Không throw error, chỉ log vì update đã thành công
+        } catch (error) {
+          this.logger.error('InventoryController#updateActualExportFields.emitEventError', { error: error.message });
         }
       }
 
@@ -1635,6 +1490,7 @@ export class InventoryController {
         message: 'Actual export fields updated successfully',
         data: result,
       };
+
     } catch (error: any) {
       this.logger.error('InventoryController#updateActualExportFields.error', {
         error: error?.message,
@@ -1748,126 +1604,49 @@ export class InventoryController {
    * @param aggrExpMestId Aggregated exp mest ID (parent)
    */
   private async checkAndEmitWorkingStateUpdate(aggrExpMestId: number): Promise<void> {
-    console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.START ===');
-    console.log('aggrExpMestId:', aggrExpMestId);
-
     try {
       // 1. Fetch parent record from local DB to get current workingStateId
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step1: Fetching local record ===');
-      const localRecord = await this.inventoryService.findInpatientExpMestByHisId(aggrExpMestId).catch((error: any) => {
-        console.error('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step1.error ===');
-        console.error('aggrExpMestId:', aggrExpMestId);
-        console.error('error:', error?.message);
-        return null;
-      });
+      const localRecord = await this.inventoryService.findInpatientExpMestByHisId(aggrExpMestId).catch(() => null);
 
       if (!localRecord) {
-        console.warn('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step1.localRecordNotFound ===');
-        console.warn('aggrExpMestId:', aggrExpMestId);
-        this.logger.debug('InventoryController#checkAndEmitWorkingStateUpdate.localRecordNotFound', {
-          aggrExpMestId,
-        });
         return;
       }
 
       const localWorkingStateId = localRecord.workingStateId || null;
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step1.localRecordFound ===');
-      console.log('localWorkingStateId:', localWorkingStateId);
-      console.log('localRecord keys:', Object.keys(localRecord));
 
       // 2. Get default WORKING_STATE_ID values from config
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step2: Getting config values ===');
       const defaultAllExportedWorkingStateId = this.configService.get<string>('DEFAULT_ALL_EXPORTED_WORKING_STATE_ID') || null;
       const defaultAllActualStatusId = this.configService.get<string>('DEFAULT_ALL_ACTUAL_STATUS_ID') || null;
-      console.log('defaultAllExportedWorkingStateId:', defaultAllExportedWorkingStateId);
-      console.log('defaultAllActualStatusId:', defaultAllActualStatusId);
 
       // 3. Only emit event if workingStateId matches one of the default values
-      // This indicates that WORKING_STATE_ID was updated due to all medicines being exported/actual exported
       const isUpdatedDueToExport = localWorkingStateId === defaultAllExportedWorkingStateId;
       const isUpdatedDueToActualExport = localWorkingStateId === defaultAllActualStatusId;
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step3: Checking conditions ===');
-      console.log('isUpdatedDueToExport:', isUpdatedDueToExport);
-      console.log('isUpdatedDueToActualExport:', isUpdatedDueToActualExport);
-      console.log('localWorkingStateId === defaultAllExportedWorkingStateId:', localWorkingStateId === defaultAllExportedWorkingStateId);
-      console.log('localWorkingStateId === defaultAllActualStatusId:', localWorkingStateId === defaultAllActualStatusId);
 
       if (!isUpdatedDueToExport && !isUpdatedDueToActualExport) {
-        // WORKING_STATE_ID was not updated due to export/actual export
-        console.warn('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step3.skip ===');
-        console.warn('WORKING_STATE_ID was not updated due to export/actual export');
-        console.warn('localWorkingStateId:', localWorkingStateId);
-        console.warn('defaultAllExportedWorkingStateId:', defaultAllExportedWorkingStateId);
-        console.warn('defaultAllActualStatusId:', defaultAllActualStatusId);
         return;
       }
 
       // 4. Fetch data from HIS to get EXP_MEST_STT_ID (old status from HIS)
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step4: Fetching HIS data ===');
       const hisResult = await this.integrationService.getInpatientExpMestById({
         expMestId: aggrExpMestId,
-      }).catch((error: any) => {
-        console.error('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step4.error ===');
-        console.error('aggrExpMestId:', aggrExpMestId);
-        console.error('error:', error?.message);
-        return null;
-      });
+      }).catch(() => null);
 
       if (!hisResult?.success || !hisResult.data) {
-        console.warn('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step4.hisDataNotFound ===');
-        console.warn('aggrExpMestId:', aggrExpMestId);
-        console.warn('hisResult:', hisResult);
-        this.logger.debug('InventoryController#checkAndEmitWorkingStateUpdate.hisDataNotFound', {
-          aggrExpMestId,
-        });
         return;
       }
 
       const hisExpMestSttId = hisResult.data.expMestSttId || null;
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step4.hisDataFound ===');
-      console.log('hisExpMestSttId:', hisExpMestSttId);
-      console.log('hisResult.data.expMestCode:', hisResult.data.expMestCode);
 
       // 5. Get working_state from masterDataService
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step5: Fetching working_state ===');
-      let working_state: any = null;
-      try {
-        working_state = await this.masterDataService.findExportStatusById(localWorkingStateId).catch((error: any) => {
-          console.error('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step5.error ===');
-          console.error('localWorkingStateId:', localWorkingStateId);
-          console.error('error:', error?.message);
-          return null;
-        });
-        console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step5.working_stateFound ===');
-        console.log('working_state:', working_state ? JSON.stringify(working_state, null, 2) : 'null');
-      } catch (e) {
-        console.error('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step5.exception ===');
-        console.error('error:', e);
-        // Ignore
-      }
+      const working_state = await this.masterDataService.findExportStatusById(localWorkingStateId).catch(() => null);
 
-      // 6. Format data giống như API GET /api/integration/exp-mests/inpatient
+      // 6. Format data like API GET /api/integration/exp-mests/inpatient
       const enrichedData = {
         ...hisResult.data,
         is_sync: true,
         workingStateId: localWorkingStateId,
         working_state: working_state,
       };
-
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step6: Preparing event payload ===');
-      console.log('expMestId:', aggrExpMestId);
-      console.log('expMestCode:', hisResult.data.expMestCode || '');
-      console.log('oldSttId:', hisExpMestSttId);
-      console.log('newSttId:', localWorkingStateId);
-      console.log('reason:', isUpdatedDueToExport ? 'all_exported' : 'all_actual_exported');
-
-      this.logger.info('InventoryController#checkAndEmitWorkingStateUpdate.emittingEvent', {
-        expMestId: aggrExpMestId,
-        expMestCode: hisResult.data.expMestCode || '',
-        oldSttId: hisExpMestSttId,
-        newSttId: localWorkingStateId,
-        reason: isUpdatedDueToExport ? 'all_exported' : 'all_actual_exported',
-      });
 
       // 7. Emit SSE event
       const eventPayload = {
@@ -1876,35 +1655,16 @@ export class InventoryController {
         oldSttId: hisExpMestSttId,
         newSttId: localWorkingStateId,
         timestamp: Date.now(),
-        data: enrichedData, // Đầy đủ thông tin như API GET /api/integration/exp-mests/inpatient
+        data: enrichedData,
       };
-
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step7: Emitting SSE event ===');
-      console.log('eventType: inpatient.exp-mest.stt-updated');
-      console.log('eventPayload:', JSON.stringify({
-        expMestId: eventPayload.expMestId,
-        expMestCode: eventPayload.expMestCode,
-        oldSttId: eventPayload.oldSttId,
-        newSttId: eventPayload.newSttId,
-        timestamp: eventPayload.timestamp,
-        hasData: !!eventPayload.data,
-      }, null, 2));
 
       this.eventEmitter.emit('inpatient.exp-mest.stt-updated', eventPayload);
 
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.step7.eventEmitted ===');
-      console.log('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.END ===');
     } catch (error: any) {
-      console.error('=== [SSE DEBUG] checkAndEmitWorkingStateUpdate.EXCEPTION ===');
-      console.error('aggrExpMestId:', aggrExpMestId);
-      console.error('error:', error?.message);
-      console.error('stack:', error?.stack);
       this.logger.error('InventoryController#checkAndEmitWorkingStateUpdate.error', {
         aggrExpMestId,
-        error: error?.message,
-        stack: error?.stack,
+        error: error.message,
       });
-      // Không throw error, chỉ log vì đây là non-critical operation
     }
   }
 
@@ -1937,22 +1697,14 @@ export class InventoryController {
       );
 
       // 2. Fetch expMestId from one of the updated medicines to allow SSE update
-      console.log('=== [SSE DEBUG] OTHER Export: hisIds.length:', dto.hisIds.length);
       if (dto.hisIds.length > 0) {
-        // Fetch one medicine to get expMestId. We can fetch using findExpMestOtherMedicinesByHisIds
-        // We only need one to identify the parent.
         const medicines = await this.inventoryService.findExpMestOtherMedicinesByHisIds([dto.hisIds[0]]);
-        console.log('=== [SSE DEBUG] OTHER Export: medicines found:', medicines.length);
         if (medicines.length > 0) {
           const expMestId = medicines[0].expMestId;
-          console.log('=== [SSE DEBUG] OTHER Export: expMestId identified:', expMestId);
 
           // 3. Emit summary update event (reuses existing summary logic but for "Other")
-          // Get updated summary data
           const summary = await this.getExpMestOtherSummary(expMestId);
-          console.log('=== [SSE DEBUG] OTHER Export: summary fetched, expMestCode:', summary.data?.expMestCode);
 
-          console.log('=== [SSE DEBUG] OTHER Export: Emitting exp-mest-other.medicines.exported');
           this.eventEmitter.emit('exp-mest-other.medicines.exported', {
             expMestId,
             expMestCode: summary.data?.expMestCode || '',
@@ -1962,9 +1714,7 @@ export class InventoryController {
           });
 
           // 4. Check and emit working state update if all medicines are exported
-          console.log('=== [SSE DEBUG] OTHER Export: Calling checkAndEmitExpMestOtherWorkingStateUpdate');
           await this.checkAndEmitExpMestOtherWorkingStateUpdate(expMestId);
-          console.log('=== [SSE DEBUG] OTHER Export: checkAndEmitExpMestOtherWorkingStateUpdate completed');
         }
       }
 
@@ -2007,18 +1757,13 @@ export class InventoryController {
       );
 
       // 2. Fetch expMestId and emit events
-      console.log('=== [SSE DEBUG] OTHER Actual Export: hisIds.length:', dto.hisIds.length);
       if (dto.hisIds.length > 0) {
         const medicines = await this.inventoryService.findExpMestOtherMedicinesByHisIds([dto.hisIds[0]]);
-        console.log('=== [SSE DEBUG] OTHER Actual Export: medicines found:', medicines.length);
         if (medicines.length > 0) {
           const expMestId = medicines[0].expMestId;
-          console.log('=== [SSE DEBUG] OTHER Actual Export: expMestId identified:', expMestId);
 
           const summary = await this.getExpMestOtherSummary(expMestId);
-          console.log('=== [SSE DEBUG] OTHER Actual Export: summary fetched, expMestCode:', summary.data?.expMestCode);
 
-          console.log('=== [SSE DEBUG] OTHER Actual Export: Emitting exp-mest-other.medicines.exported');
           this.eventEmitter.emit('exp-mest-other.medicines.exported', {
             expMestId,
             expMestCode: summary.data?.expMestCode || '',
@@ -2070,20 +1815,14 @@ export class InventoryController {
       );
 
       // 2. Fetch expMestId from one of the updated medicines to allow SSE update
-      console.log('=== [SSE DEBUG] CABINET Export: hisIds.length:', dto.hisIds.length);
       if (dto.hisIds.length > 0) {
-        // Fetch one medicine to get expMestId
         const medicines = await this.inventoryService.findExpMestCabinetMedicinesByHisIds([dto.hisIds[0]]);
-        console.log('=== [SSE DEBUG] CABINET Export: medicines found:', medicines.length);
         if (medicines.length > 0) {
           const expMestId = medicines[0].expMestId;
-          console.log('=== [SSE DEBUG] CABINET Export: expMestId identified:', expMestId);
 
           // 3. Emit summary update event
           const summary = await this.getExpMestCabinetSummary(expMestId.toString());
-          console.log('=== [SSE DEBUG] CABINET Export: summary fetched, expMestCode:', summary.data?.expMestCode);
 
-          console.log('=== [SSE DEBUG] CABINET Export: Emitting exp-mest-cabinet.medicines.exported');
           this.eventEmitter.emit('exp-mest-cabinet.medicines.exported', {
             expMestId,
             expMestCode: summary.data?.expMestCode || '',
@@ -2093,9 +1832,7 @@ export class InventoryController {
           });
 
           // 4. Check and emit working state update if all medicines are exported
-          console.log('=== [SSE DEBUG] CABINET Export: Calling checkAndEmitExpMestCabinetWorkingStateUpdate');
           await this.checkAndEmitExpMestCabinetWorkingStateUpdate(expMestId);
-          console.log('=== [SSE DEBUG] CABINET Export: checkAndEmitExpMestCabinetWorkingStateUpdate completed');
         }
       }
 
@@ -2138,18 +1875,13 @@ export class InventoryController {
       );
 
       // 2. Fetch expMestId and emit events
-      console.log('=== [SSE DEBUG] CABINET Actual Export: hisIds.length:', dto.hisIds.length);
       if (dto.hisIds.length > 0) {
         const medicines = await this.inventoryService.findExpMestCabinetMedicinesByHisIds([dto.hisIds[0]]);
-        console.log('=== [SSE DEBUG] CABINET Actual Export: medicines found:', medicines.length);
         if (medicines.length > 0) {
           const expMestId = medicines[0].expMestId;
-          console.log('=== [SSE DEBUG] CABINET Actual Export: expMestId identified:', expMestId);
 
           const summary = await this.getExpMestCabinetSummary(expMestId.toString());
-          console.log('=== [SSE DEBUG] CABINET Actual Export: summary fetched, expMestCode:', summary.data?.expMestCode);
 
-          console.log('=== [SSE DEBUG] CABINET Actual Export: Emitting exp-mest-cabinet.medicines.exported');
           this.eventEmitter.emit('exp-mest-cabinet.medicines.exported', {
             expMestId,
             expMestCode: summary.data?.expMestCode || '',
@@ -2209,6 +1941,4 @@ export class InventoryController {
       // Don't throw - this is a background operation
     }
   }
-
-
 }

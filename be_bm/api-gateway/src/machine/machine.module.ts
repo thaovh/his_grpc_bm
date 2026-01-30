@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+
 import { MachineService } from './machine.service';
 import { MachineController } from './machine.controller';
 import { MasterDataModule } from '../master-data/master-data.module';
@@ -20,12 +21,13 @@ import { MasterDataModule } from '../master-data/master-data.module';
                         options: {
                             url: `${machineConfig.url || 'localhost'}:${machineConfig.port || '50056'}`,
                             package: 'machine',
-                            protoPath: join(__dirname, '../_proto/machine.proto'),
+                            protoPath: PROTO_PATH.machine,
                             loader: {
                                 enums: String,
                                 objects: true,
                                 arrays: true,
-                                include: [join(__dirname, '../_proto')],
+                                includeDirs: [PROTO_ROOT_DIR],
+
                             },
                         },
                     };

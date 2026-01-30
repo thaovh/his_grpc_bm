@@ -31,8 +31,14 @@ export class ExpMestSttService {
       const cached = await this.redisService.getExpMestStt();
       if (cached && cached.length > 0) {
         this.logger.info('ExpMestSttService#getExpMestStt.cacheHit', { count: cached.length });
-        // Convert numeric fields
-        const data = cached.map((s: any) => this.convertExpMestSttNumberFields(s));
+        // Convert numeric fields and map legacy keys
+        const data = cached.map((s: any) => {
+          const converted = this.convertExpMestSttNumberFields(s);
+          // Handle legacy cache structure
+          if (!converted.code && converted.expMestSttCode) converted.code = converted.expMestSttCode;
+          if (!converted.name && converted.expMestSttName) converted.name = converted.expMestSttName;
+          return converted;
+        });
         return { success: true, data };
       }
 
@@ -85,8 +91,8 @@ export class ExpMestSttService {
         appModifier: s.APP_MODIFIER || null,
         isActive: s.IS_ACTIVE,
         isDelete: s.IS_DELETE,
-        expMestSttCode: s.EXP_MEST_STT_CODE,
-        expMestSttName: s.EXP_MEST_STT_NAME,
+        code: s.EXP_MEST_STT_CODE,
+        name: s.EXP_MEST_STT_NAME,
       }));
 
       await this.redisService.setExpMestStt(mapped, 86400);

@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package users;
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string passwordHash = 4;
+  int64 acsId = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+  string deletedAt = 8;
+  int32 version = 9;
+  string createdBy = 10;
+  string updatedBy = 11;
+  int32 isActive = 12;
+  string attendanceId = 13;
+  repeated Role roles = 14;
+}
+
+message CreateUserInput {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  int64 acsId = 4;
+  string firstName = 5;
+  string lastName = 6;
+  string phone = 7;
+}
+
+message UpdateUserInput {
+  string id = 1;
+  string email = 2;
+  int64 acsId = 3;
+}
+
+message UpdatePasswordInput {
+  string id = 1;
+  string password = 2;
+}
+
+message UserList {
+  repeated User data = 1;
+}
+
+message UserWithProfile {
+  User user = 1;
+  UserProfile profile = 2;
+}

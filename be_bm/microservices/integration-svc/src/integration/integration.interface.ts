@@ -202,8 +202,8 @@ export interface ExpMestStt {
   appModifier?: string | null;
   isActive: number;
   isDelete: number;
-  expMestSttCode: string;
-  expMestSttName: string;
+  code: string;
+  name: string;
 }
 
 export interface ExpMestType {
@@ -212,8 +212,8 @@ export interface ExpMestType {
   modifyTime: number;
   isActive: number;
   isDelete: number;
-  expMestTypeCode: string;
-  expMestTypeName: string;
+  code: string;
+  name: string;
 }
 
 export interface ExpMest {

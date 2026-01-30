@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package inventory;
+
+import "commons.proto";
+import "inventory/exp-mest.proto";
+import "inventory/exp-mest-cabinet.proto";
+import "inventory/inpatient.proto";
+import "inventory/other.proto";
+import "inventory/summary.proto";
+
+service InventoryService {
+  // Generic ExpMest methods
+  rpc findAll (commons.Query) returns (ExpMestList) {}
+  rpc findById (commons.Id) returns (ExpMest) {}
+  rpc findByExpMestId (commons.Id) returns (ExpMest) {}
+  rpc count (commons.Query) returns (commons.Count) {}
+  rpc create (CreateExpMestInput) returns (ExpMest) {}
+  rpc update (UpdateExpMestInput) returns (ExpMest) {}
+  rpc destroy (commons.Id) returns (commons.Count) {}
+
+  // ExpMest Cabinet (New)
+  rpc findExpMestCabinetsByHisIds (FindExpMestCabinetsByHisIdsInput) returns (ExpMestCabinetList) {}
+  rpc findExpMestCabinetByHisId (commons.Id) returns (ExpMestCabinet) {}
+  rpc syncAllExpMestCabinet (SyncAllExpMestCabinetInput) returns (SyncAllExpMestCabinetResponse) {}
+  rpc updateExpMestCabinet (UpdateExpMestCabinetInput) returns (ExpMestCabinet) {}
+  rpc findExpMestCabinetMedicinesByExpMestId (FindExpMestCabinetMedicinesByExpMestIdInput) returns (ExpMestCabinetMedicineList) {}
+  rpc findExpMestCabinetMedicinesByHisIds (FindExpMestCabinetMedicinesByHisIdsInput) returns (ExpMestCabinetMedicineList) {}
+  rpc updateExpMestCabinetMedicineExportFieldsByHisIds (UpdateExpMestCabinetMedicineExportFieldsByHisIdsInput) returns (UpdateExpMestCabinetMedicineExportFieldsByHisIdsOutput) {}
+  rpc updateExpMestCabinetMedicineActualExportFieldsByHisIds (UpdateExpMestCabinetMedicineActualExportFieldsByHisIdsInput) returns (UpdateExpMestCabinetMedicineActualExportFieldsByHisIdsOutput) {}
+
+  // Inpatient aggregated ExpMest
+
+  rpc findAllInpatientExpMests (commons.Query) returns (InpatientExpMestList) {}
+  rpc findInpatientExpMestById (commons.Id) returns (InpatientExpMest) {}
+  rpc findInpatientExpMestByHisId (commons.Id) returns (InpatientExpMest) {}
+  rpc syncInpatientExpMest (SyncInpatientExpMestInput) returns (InpatientExpMest) {}
+  rpc syncAllInpatientExpMest (SyncAllInpatientExpMestInput) returns (SyncAllInpatientExpMestResponse) {}
+  rpc findInpatientExpMestChildrenByAggrExpMestId (FindInpatientExpMestChildrenByAggrExpMestIdInput) returns (InpatientExpMestChildList) {}
+  rpc findInpatientExpMestsByHisIds (FindInpatientExpMestsByHisIdsInput) returns (InpatientExpMestList) {}
+  rpc findInpatientExpMestChildByHisId (FindInpatientExpMestChildByHisIdInput) returns (InpatientExpMestChild) {}
+  rpc updateInpatientExpMest (UpdateInpatientExpMestInput) returns (InpatientExpMest) {}
+  rpc countInpatientExpMests (commons.Query) returns (commons.Count) {}
+  rpc createInpatientExpMest (commons.Id) returns (InpatientExpMest) {}
+
+  // Inpatient Medicine (Handled by InpatientExpMestMedicineController -> InventoryService)
+  rpc findInpatientExpMestMedicines (commons.Query) returns (InpatientExpMestMedicineList) {}
+  rpc findInpatientExpMestMedicinesByInpatientExpMestId (FindInpatientExpMestMedicinesByInpatientExpMestIdInput) returns (InpatientExpMestMedicineList) {}
+  rpc findInpatientExpMestMedicineByHisId (FindInpatientExpMestMedicineByHisIdInput) returns (InpatientExpMestMedicine) {}
+  rpc updateExportFieldsByHisIds (UpdateExportFieldsByHisIdsInput) returns (UpdateExportFieldsByHisIdsOutput) {}
+  rpc updateActualExportFieldsByHisIds (UpdateActualExportFieldsByHisIdsInput) returns (UpdateActualExportFieldsByHisIdsOutput) {}
+
+  // ExpMestOther
+  rpc findAllExpMestOthers (commons.Query) returns (ExpMestOtherList) {}
+  rpc findExpMestOtherById (commons.Id) returns (ExpMestOther) {}
+  rpc findExpMestOtherByHisId (commons.Id) returns (ExpMestOther) {}
+  rpc findExpMestOthersByHisIds (FindExpMestOthersByHisIdsInput) returns (ExpMestOtherList) {}
+  rpc syncAllExpMestOther (SyncAllExpMestOtherInput) returns (SyncAllExpMestOtherResponse) {}
+  rpc updateExpMestOther (UpdateExpMestOtherInput) returns (ExpMestOther) {}
+  rpc createExpMestOther (CreateExpMestOtherInput) returns (ExpMestOther) {}
+
+  // Other Medicine (Handled by ExpMestOtherMedicineController -> InventoryService)
+  rpc findAllExpMestOtherMedicines (commons.Query) returns (ExpMestOtherMedicineList) {}
+  rpc findExpMestOtherMedicineById (commons.Id) returns (ExpMestOtherMedicine) {}
+  rpc findExpMestOtherMedicineByHisId (FindExpMestOtherMedicineByHisIdInput) returns (ExpMestOtherMedicine) {}
+  rpc findExpMestOtherMedicinesByHisIds (FindExpMestOtherMedicinesByHisIdsInput) returns (ExpMestOtherMedicineList) {}
+  rpc findExpMestOtherMedicinesByExpMestId (FindExpMestOtherMedicinesByExpMestIdInput) returns (ExpMestOtherMedicineList) {}
+  rpc createExpMestOtherMedicine (CreateExpMestOtherMedicineInput) returns (ExpMestOtherMedicine) {}
+  rpc updateExpMestOtherMedicine (UpdateExpMestOtherMedicineInput) returns (ExpMestOtherMedicine) {}
+  rpc updateExpMestOtherMedicineExportFieldsByHisIds (UpdateExpMestOtherMedicineExportFieldsByHisIdsInput) returns (commons.Count) {}
+  rpc updateExpMestOtherMedicineActualExportFieldsByHisIds (UpdateExpMestOtherMedicineActualExportFieldsByHisIdsInput) returns (commons.Count) {}
+
+  // Summary methods (NEW - Phase 1 Refactor)
+  rpc GetExpMestCabinetSummary (GetExpMestCabinetSummaryRequest) returns (ExpMestSummaryResponse) {}
+  rpc GetExpMestOtherSummary (GetExpMestOtherSummaryRequest) returns (ExpMestSummaryResponse) {}
+  rpc GetInpatientExpMestSummary (GetInpatientExpMestSummaryRequest) returns (ExpMestSummaryResponse) {}
+  
+  // Working state update methods (NEW - Phase 1 Refactor)
+  rpc CheckAndUpdateExpMestCabinetWorkingState (CheckAndUpdateWorkingStateRequest) returns (CheckAndUpdateWorkingStateResponse) {}
+  rpc CheckAndUpdateExpMestOtherWorkingState (CheckAndUpdateWorkingStateRequest) returns (CheckAndUpdateWorkingStateResponse) {}
+  rpc CheckAndUpdateInpatientExpMestWorkingState (CheckAndUpdateWorkingStateRequest) returns (CheckAndUpdateWorkingStateResponse) {}
+}
+
+service ExpMestMedicineService {
+  // Handled by ExpMestMedicineController
+  rpc findAll (commons.Query) returns (ExpMestMedicineList) {}
+  rpc findById (commons.Id) returns (ExpMestMedicine) {}
+  rpc findByHisId (commons.Id) returns (ExpMestMedicine) {}
+  rpc findByExpMestId (commons.Id) returns (ExpMestMedicineList) {}
+  rpc count (commons.Query) returns (commons.Count) {}
+  rpc create (CreateExpMestMedicineInput) returns (ExpMestMedicine) {}
+  rpc update (UpdateExpMestMedicineInput) returns (ExpMestMedicine) {}
+  rpc destroy (commons.Query) returns (commons.Count) {}
+}

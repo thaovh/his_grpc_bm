@@ -133,12 +133,24 @@ export class EventsController {
 
     const subscription = this.eventsGateway.getEventStream().subscribe({
       next: (event) => {
+        // [DEBUG-SSE] Trace incoming event
+        const debugEventType = event.type;
+        // const debugTopicList = topicList; 
+
         if (topicList.length > 0) {
           const eventType = event.type.toLowerCase().replace(/_/g, '-').replace(/\./g, '-');
-          if (!topicList.includes(eventType)) return;
+
+          if (!topicList.includes(eventType)) {
+            // console.log(`[DEBUG-SSE] Event filtered out. Type: ${eventType}, Topics: ${topicList.join(',')}`); 
+            return;
+          }
+          console.log(`[DEBUG-SSE] Event MATCHED. Type: ${eventType}, Client Topics: ${topicList.join(',')}`);
+        } else {
+          console.log(`[DEBUG-SSE] Event broadcasting (no filter). Type: ${event.type}`);
         }
 
         // Send event with ID
+        console.log(`[DEBUG-SSE] Writing to response for client. Event ID: ${event.id}`);
         sendSSE({
           type: event.type,
           data: event.data,

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
 import { FCMProvider } from './providers/fcm.provider';
 import { NotificationService } from './services/notification.service';
 import { NotificationRetryService } from './services/notification-retry.service';
@@ -20,8 +20,11 @@ import { RedisModule } from '../redis/redis.module';
                     transport: Transport.GRPC,
                     options: {
                         package: 'users',
-                        protoPath: join(__dirname, '../_proto/users.proto'),
+                        protoPath: PROTO_PATH.users,
                         url: configService.get('USERS_GRPC_URL') || 'localhost:50051',
+                        loader: {
+                            includeDirs: [PROTO_ROOT_DIR],
+                        }
                     },
                 }),
                 inject: [ConfigService],
@@ -29,8 +32,8 @@ import { RedisModule } from '../redis/redis.module';
         ]),
     ],
     providers: [
-        FCMProvider, 
-        NotificationService, 
+        FCMProvider,
+        NotificationService,
         NotificationRetryService,
         AttendanceEventListener
     ],

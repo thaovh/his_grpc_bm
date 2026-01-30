@@ -3,12 +3,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { join } from 'path';
+import { PROTO_PATH, PROTO_ROOT_DIR } from '@bmaibe/protos';
+import * as path from 'path';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthToken } from './entities/auth-token.entity';
 import { AuthController } from './controllers/auth.controller';
 import { AuthServiceImpl } from './services/auth.service';
 import { AuthRepository } from './repositories/auth.repository';
+
+
 
 @Module({ // Trigger reload for JWT fix
   imports: [
@@ -18,9 +21,7 @@ import { AuthRepository } from './repositories/auth.repository';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key-change-in-production',
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
-        },
+        signOptions: { expiresIn: '60m' },
       }),
     }),
     ClientsModule.registerAsync([
@@ -33,7 +34,7 @@ import { AuthRepository } from './repositories/auth.repository';
           options: {
             url: `${configService.get('USERS_SVC_URL') || 'localhost'}:${configService.get('USERS_SVC_PORT') || '50052'}`,
             package: 'users',
-            protoPath: join(__dirname, '../_proto/users.proto'),
+            protoPath: PROTO_PATH.users,
             loader: {
               enums: String,
               objects: true,
@@ -41,7 +42,8 @@ import { AuthRepository } from './repositories/auth.repository';
               keepCase: true,
               defaults: true,
               oneofs: true,
-              include: [join(__dirname, '../_proto')],
+
+              includeDirs: [PROTO_ROOT_DIR],
             },
           },
         }),
@@ -55,7 +57,7 @@ import { AuthRepository } from './repositories/auth.repository';
           options: {
             url: `${configService.get('INTEGRATION_SVC_URL') || 'localhost'}:${configService.get('INTEGRATION_SVC_PORT') || '50053'}`,
             package: 'integration',
-            protoPath: join(__dirname, '../_proto/integration.proto'),
+            protoPath: PROTO_PATH.integration,
             loader: {
               enums: String,
               objects: true,
@@ -63,7 +65,8 @@ import { AuthRepository } from './repositories/auth.repository';
               keepCase: true,
               defaults: true,
               oneofs: true,
-              include: [join(__dirname, '../_proto')],
+
+              includeDirs: [PROTO_ROOT_DIR],
             },
           },
         }),

@@ -281,7 +281,9 @@ export class ExpMestMedicineService {
       // Special handling: if only one ID, try the singular GetView1 API
       // as it might be a Single ExpMest (not an aggregated/child one)
       let hisResponse: any;
-      if (expMestIdsNumbers.length === 1) {
+      // [DEBUG] Force bulk API usage to test if GetView works better than GetView1
+      const singleIdFallback = true;
+      if (expMestIdsNumbers.length === 1 && singleIdFallback) {
         this.logger.info('ExpMestMedicineService#getExpMestMedicinesByIds.singleIdFallback', {
           id: expMestIdsNumbers[0]
         });

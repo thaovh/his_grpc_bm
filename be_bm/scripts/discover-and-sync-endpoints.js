@@ -14,7 +14,7 @@ const path = require('path');
 const axios = require('axios');
 
 // CONFIGURATION
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmN2FiYzg4Yi05ODIyLTRlZGMtYTJlMi1jZmZkMzhjZTFhZDIiLCJ1c2VybmFtZSI6InZodDIiLCJlbWFpbCI6InZodDJAYmFjaG1haS5lZHUudm4iLCJhY3NJZCI6NjQxOSwicm9sZXMiOlsiQURNSU4iXSwiZW1wbG95ZWVDb2RlIjoiMTg0NCIsImlzcyI6ImJtYWliZS1hdXRoLXNlcnZpY2UiLCJpYXQiOjE3Njg3MzA3MjcsImV4cCI6MTc2ODc0MjcyN30.JOtWS8ZoUsx1AwtZ4ImTD1DtNdF2UuMMVLgOQ4nydwg';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmN2FiYzg4Yi05ODIyLTRlZGMtYTJlMi1jZmZkMzhjZTFhZDIiLCJ1c2VybmFtZSI6InZodDIiLCJlbWFpbCI6InZodDJAYmFjaG1haS5lZHUudm4iLCJhY3NJZCI6NjQxOSwicm9sZXMiOlsiQURNSU4iXSwiZW1wbG95ZWVDb2RlIjoiMTg0NCIsImlzcyI6ImJtYWliZS1hdXRoLXNlcnZpY2UiLCJpYXQiOjE3Njg4NzY4NTgsImV4cCI6MTc2ODg4ODg1OH0.NbjAQB8oD2GkHbZ5sEpH2-9oKfXBj5UyUL-mk9Mw4Qg';
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:3000/api/gateway-config/endpoints';
 const GATEWAY_BASE_URL = process.env.GATEWAY_BASE_URL || 'http://localhost:3000/api/gateway-config';
 const GLOBAL_PREFIX = process.env.GLOBAL_PREFIX || 'api'; // From app.setGlobalPrefix('api')
@@ -26,11 +26,11 @@ const CONTROLLERS_DIR = path.join(__dirname, '../api-gateway/src');
 function extractRoutes(filePath, content) {
     const routes = [];
     const lines = content.split('\n');
-    
+
     // Extract controller base path
     const controllerMatch = content.match(/@Controller\(['"]([^'"]+)['"]\)/);
     const basePath = controllerMatch ? controllerMatch[1] : '';
-    
+
     // Extract class-level @Resource() decorator (if exists)
     // Look for @Resource() before @Controller() or right after class declaration
     let classLevelResource = null;
@@ -38,49 +38,51 @@ function extractRoutes(filePath, content) {
     if (classResourceMatch) {
         classLevelResource = classResourceMatch[1];
     }
-    
+
     // Use class-level resource as default if no method-level resource found
     let defaultResource = classLevelResource;
-    
+
     let currentResource = null;
     let currentMethod = null;
     let currentPath = null;
     let isPublic = false;
-    
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        
+
         // Check for @Public() decorator (can be on any line before the method)
         if (line.includes('@Public()')) {
             isPublic = true;
         }
-        
-        // Extract @Resource() decorator (method-level, overrides class-level)
-        const resourceMatch = line.match(/@Resource\(['"]([^'"]+)['"]\)/);
-        if (resourceMatch) {
-            currentResource = resourceMatch[1];
-            continue;
-        }
-        
+
+        // REMOVED: Extract @Resource() decorator here. 
+        // We now rely purely on look-back and look-forward relative to the HTTP method decorator
+        // to avoid "leaking" resource definitions from previous methods across long function bodies.
+
+
         // Extract HTTP method decorators
         const methodMatch = line.match(/@(Get|Post|Put|Patch|Delete|Options|Head)\(['"]?([^'")]*)['"]?\)/);
         if (methodMatch) {
             // Check for @Public() decorator BEFORE HTTP method (already set in loop above)
             // Also check AFTER HTTP method decorator (some decorators are placed after)
             let endpointIsPublic = isPublic; // Current state from before
-            
+
+            // Start with no resource (ignore any leaked state)
+            currentResource = null;
+
             // If we found a method but no resource yet, look backwards for @Resource()
             if (!currentResource) {
-                // Look back up to 5 lines for @Resource()
-                for (let j = Math.max(0, i - 5); j < i; j++) {
+                // Look back up to 10 lines for @Resource() (increased from 5)
+                for (let j = Math.max(0, i - 10); j < i; j++) {
                     const resourceMatchBack = lines[j].match(/@Resource\(['"]([^'"]+)['"]\)/);
                     if (resourceMatchBack) {
                         currentResource = resourceMatchBack[1];
-                        break;
+                        // Don't break immediately, as we want the CLOSEST one to the method
+                        // Actually, closest one is the last one found in this range
                     }
                 }
             }
-            
+
             // If still no resource, look forward up to 5 lines for @Resource()
             // (Some decorators are placed after the HTTP method decorator)
             if (!currentResource) {
@@ -91,12 +93,12 @@ function extractRoutes(filePath, content) {
                         break;
                     }
                     // Stop if we hit another HTTP method decorator or method declaration
-                    if (lines[j].match(/@(Get|Post|Put|Patch|Delete|Options|Head)\(/) || lines[j].match(/^\s*(async\s+)?\w+\s*\(/)) {
+                    if (lines[j].match(/@(Get|Post|Put|Patch|Delete|Options|Head)\(/) || lines[j].match(/^\s*(async\s+)?(public|private|protected)?\s*\w+\s*\(/)) {
                         break;
                     }
                 }
             }
-            
+
             // Also check for @Public() AFTER HTTP method decorator
             if (!endpointIsPublic) {
                 for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
@@ -105,30 +107,30 @@ function extractRoutes(filePath, content) {
                         break;
                     }
                     // Stop if we hit another HTTP method decorator or method declaration
-                    if (lines[j].match(/@(Get|Post|Put|Patch|Delete|Options|Head)\(/) || lines[j].match(/^\s*(async\s+)?\w+\s*\(/)) {
+                    if (lines[j].match(/@(Get|Post|Put|Patch|Delete|Options|Head)\(/) || lines[j].match(/^\s*(async\s+)?(public|private|protected)?\s*\w+\s*\(/)) {
                         break;
                     }
                 }
             }
-            
+
             // If still no resource, use class-level resource (if exists)
             if (!currentResource && defaultResource) {
                 currentResource = defaultResource;
             }
-            
+
             currentMethod = methodMatch[1].toUpperCase();
             currentPath = methodMatch[2] || '';
-            
+
             // Build full path
             // In NestJS, route paths are always relative to controller base path
             // Even if they start with '/', they're not absolute from app root
             let fullPath = basePath;
             if (currentPath) {
                 // Remove leading '/' if present (it's just a route separator, not absolute)
-                const normalizedRoutePath = currentPath.startsWith('/') 
-                    ? currentPath.substring(1) 
+                const normalizedRoutePath = currentPath.startsWith('/')
+                    ? currentPath.substring(1)
                     : currentPath;
-                
+
                 // Combine basePath with route path
                 if (basePath) {
                     fullPath = basePath + (basePath.endsWith('/') ? '' : '/') + normalizedRoutePath;
@@ -136,18 +138,18 @@ function extractRoutes(filePath, content) {
                     fullPath = normalizedRoutePath;
                 }
             }
-            
+
             // Normalize path: ensure it starts with / but not duplicate /api
             if (!fullPath.startsWith('/')) {
                 fullPath = '/' + fullPath;
             }
-            
+
             // Add global prefix if not present (check both /api and /api/v1 patterns)
             const prefixPattern = new RegExp(`^/${GLOBAL_PREFIX}(/|$)`);
             if (!prefixPattern.test(fullPath)) {
                 fullPath = `/${GLOBAL_PREFIX}${fullPath.startsWith('/') ? '' : '/'}${fullPath}`;
             }
-            
+
             // Only add route if we have a resource
             if (currentResource && currentMethod) {
                 routes.push({
@@ -161,7 +163,7 @@ function extractRoutes(filePath, content) {
                     description: extractDescription(lines, i)
                 });
             }
-            
+
             // Reset for next route
             // Keep class-level resource for next method, but reset method-level resource
             currentMethod = null;
@@ -170,8 +172,23 @@ function extractRoutes(filePath, content) {
             isPublic = false; // Reset for next endpoint
         }
     }
-    
+
     return routes;
+}
+
+/**
+ * Infer resource name if missing
+ */
+function inferResourceName(moduleName, resourcePath) {
+    if (!resourcePath) return `${moduleName}.general`;
+    // Clean path to make resource name
+    const cleanPath = resourcePath
+        .replace(/\/+$/, '') // Remove trailing slash
+        .replace(/^\/+/, '') // Remove leading slash
+        .replace(/\/:[^/]+/g, '') // Remove params
+        .replace(/\//g, '.'); // Replace / with .
+
+    return cleanPath ? `${moduleName}.${cleanPath}` : `${moduleName}.general`;
 }
 
 /**
@@ -183,14 +200,14 @@ function extractRoutes(filePath, content) {
 function inferAction(method, path, fullPath) {
     // Check both path (route path) and fullPath (full URL path) for action keywords
     const pathToCheck = fullPath || path;
-    
+
     // If path contains action keywords, use them (check in order of specificity)
     // Note: Check for actual actions, not resource names (e.g., /export-statuses is a resource, not /export action)
     if (pathToCheck.includes('/actual-export')) return 'actual-export';
     // Only infer 'export' if it's a standalone action, not part of a resource name
     // Pattern: /resource/export or /resource/:id/export (action)
     // Not: /export-statuses or /export-something (resource name)
-    if (pathToCheck.match(/\/export$/i) || pathToCheck.match(/\/:[^/]+\/export$/i) || 
+    if (pathToCheck.match(/\/export$/i) || pathToCheck.match(/\/:[^/]+\/export$/i) ||
         pathToCheck.match(/\/medicines\/export$/i) || pathToCheck.match(/\/medicines\/actual-export$/i)) {
         return pathToCheck.includes('/actual-export') ? 'actual-export' : 'export';
     }
@@ -205,14 +222,18 @@ function inferAction(method, path, fullPath) {
     if (pathToCheck.includes('/summary')) return 'read';
     if (pathToCheck.includes('/count')) return 'read';
     if (pathToCheck.includes('/me')) return 'read';
-    
+    if (pathToCheck.includes('stream')) return 'read';
+
+    // Note: Previously had specific fixes for exp-mest-stt etc.
+    // But now we default ALL GETs to 'read' at the bottom, so we don't need exceptions.
+
     // Standard CRUD actions
     if (method === 'GET') {
         // Check if path has parameter at the end (e.g., ':id', ':expMestId')
         // Pattern: ends with /:paramName or /:paramName/...
         const paramAtEndMatch = path.match(/\/:[\w-]+$/);
         const paramInMiddleMatch = path.match(/\/:[\w-]+\//);
-        
+
         if (paramAtEndMatch) {
             // Path ends with param (e.g., '/:id') -> read
             return 'read';
@@ -221,8 +242,8 @@ function inferAction(method, path, fullPath) {
             // Check if sub-path is a collection or action
             const subPath = path.split('/').pop();
             if (['maintenance', 'documents', 'transfers', 'medicines', 'details'].includes(subPath)) {
-                // Sub-resource collection -> list
-                return 'list';
+                // Sub-resource collection -> read (Backend seems to treat everything as read)
+                return 'read';
             }
             // Other sub-paths -> read
             return 'read';
@@ -230,13 +251,13 @@ function inferAction(method, path, fullPath) {
             // Has param somewhere or nested path -> read
             return 'read';
         }
-        // No params -> list
-        return 'list';
+        // No params -> read (Backend default)
+        return 'read';
     }
     if (method === 'POST') return 'create';
     if (method === 'PUT' || method === 'PATCH') return 'update';
     if (method === 'DELETE') return 'delete';
-    
+
     return null; // Let guard infer automatically
 }
 
@@ -258,13 +279,13 @@ function inferModule(basePath) {
         'app/navigation': 'Navigation',
         'gateway-config': 'GatewayConfig'
     };
-    
+
     for (const [key, value] of Object.entries(moduleMap)) {
         if (basePath.includes(key)) {
             return value;
         }
     }
-    
+
     return 'Unknown';
 }
 
@@ -287,18 +308,18 @@ function extractDescription(lines, startIndex) {
 function findControllers(dir) {
     const controllers = [];
     const files = fs.readdirSync(dir);
-    
+
     for (const file of files) {
         const filePath = path.join(dir, file);
         const stat = fs.statSync(filePath);
-        
+
         if (stat.isDirectory()) {
             controllers.push(...findControllers(filePath));
         } else if (file.endsWith('.controller.ts')) {
             controllers.push(filePath);
         }
     }
-    
+
     return controllers;
 }
 
@@ -344,7 +365,7 @@ function findEndpointId(existingEndpoints, path, method) {
  */
 function needsUpdate(existingEndpoint, newEndpoint) {
     if (!existingEndpoint) return false;
-    
+
     return (
         existingEndpoint.resourceName !== newEndpoint.resourceName ||
         existingEndpoint.action !== newEndpoint.action ||
@@ -360,17 +381,17 @@ function needsUpdate(existingEndpoint, newEndpoint) {
 async function discoverAndSync() {
     console.log('🔍 Discovering endpoints from controllers...\n');
     console.log(`📌 Global prefix: /${GLOBAL_PREFIX}\n`);
-    
+
     const controllerFiles = findControllers(CONTROLLERS_DIR);
     console.log(`Found ${controllerFiles.length} controller files\n`);
-    
+
     const allRoutes = [];
-    
+
     for (const filePath of controllerFiles) {
         try {
             const content = fs.readFileSync(filePath, 'utf-8');
             const routes = extractRoutes(filePath, content);
-            
+
             if (routes.length > 0) {
                 console.log(`📄 ${path.basename(filePath)}: ${routes.length} routes`);
                 allRoutes.push(...routes);
@@ -379,9 +400,9 @@ async function discoverAndSync() {
             console.error(`❌ Error reading ${filePath}:`, error.message);
         }
     }
-    
+
     console.log(`\n✅ Total discovered: ${allRoutes.length} endpoints\n`);
-    
+
     if (ADMIN_TOKEN === 'YOUR_ADMIN_JWT_TOKEN_HERE') {
         console.error('❌ Error: Please set ADMIN_TOKEN environment variable or update the script.');
         console.log('\n📋 Discovered endpoints:');
@@ -390,20 +411,20 @@ async function discoverAndSync() {
         });
         return;
     }
-    
+
     // Fetch existing endpoints for comparison
     console.log('📥 Fetching existing endpoints from database...\n');
     const existingEndpoints = await getExistingEndpoints();
     console.log(`Found ${existingEndpoints.length} existing endpoints\n`);
-    
+
     console.log('🚀 Syncing endpoints to database...\n');
-    
+
     let successCount = 0;
     let updateCount = 0;
     let createCount = 0;
     let failCount = 0;
     let skippedCount = 0;
-    
+
     for (const route of allRoutes) {
         try {
             const payload = {
@@ -415,12 +436,12 @@ async function discoverAndSync() {
                 resourceName: route.resourceName,
                 action: route.action || null
             };
-            
+
             // Check if endpoint exists
             const existingEndpoint = existingEndpoints.find(
                 e => e.path === route.path && e.method === route.method
             );
-            
+
             if (existingEndpoint) {
                 // Endpoint exists - check if update needed
                 if (needsUpdate(existingEndpoint, payload)) {
@@ -473,7 +494,7 @@ async function discoverAndSync() {
             }
         }
     }
-    
+
     console.log('\n--- SYNC SUMMARY ---');
     console.log(`Total discovered: ${allRoutes.length}`);
     console.log(`✅ Success: ${successCount} (${createCount} created, ${updateCount} updated)`);

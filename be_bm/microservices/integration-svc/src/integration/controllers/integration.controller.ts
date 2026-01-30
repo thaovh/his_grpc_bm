@@ -6,10 +6,17 @@ import { HisLoginRequest, HisLoginResponse, HisUserInfo } from '../providers/his
 import { Count } from '../../commons/interfaces/commons.interface';
 import { UserRoom } from '../integration.interface';
 
+import { ExpMestSyncService } from '../services/exp-mest-sync.service';
+import { ExpMestEnrichmentService } from '../services/exp-mest-enrichment.service';
+import { ExpMestAutoUpdateService } from '../services/exp-mest-auto-update.service';
+
 @Controller()
 export class IntegrationController {
   constructor(
     private readonly integrationService: IntegrationServiceImpl,
+    private readonly expMestSyncService: ExpMestSyncService,
+    private readonly expMestEnrichmentService: ExpMestEnrichmentService,
+    private readonly expMestAutoUpdateService: ExpMestAutoUpdateService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(IntegrationController.name);
@@ -460,7 +467,8 @@ export class IntegrationController {
 
   @GrpcMethod('IntegrationService', 'getExpMestById')
   async getExpMestById(data: {
-    expMestId: number;
+    id?: number;
+    expMestId?: number;
     includeDeleted?: boolean;
     dataDomainFilter?: boolean;
     userId?: string;
@@ -471,7 +479,18 @@ export class IntegrationController {
   }> {
     this.logger.info('IntegrationController#getExpMestById.call', data);
     try {
-      const result = await this.integrationService.getExpMestById(data);
+      // Map 'id' from proto to 'expMestId' for service
+      const payload = {
+        ...data,
+        expMestId: data.expMestId ?? data.id,
+      };
+
+      // Validate required ID
+      if (!payload.expMestId) {
+        return { success: false, message: 'ExpMest ID is required' };
+      }
+
+      const result = await this.integrationService.getExpMestById(payload as any);
       this.logger.info('IntegrationController#getExpMestById.result', {
         success: result.success,
         hasData: !!result.data,
@@ -536,7 +555,18 @@ export class IntegrationController {
   }> {
     this.logger.info('IntegrationController#getInpatientExpMestById.call', data);
     try {
-      const result = await this.integrationService.getInpatientExpMestById(data);
+      // Map 'id' from proto to 'expMestId' for service
+      const payload = {
+        ...data,
+        expMestId: data.expMestId ?? data.id,
+      };
+
+      // Validate required ID
+      if (!payload.expMestId) {
+        return { success: false, message: 'ExpMest ID is required' };
+      }
+
+      const result = await this.integrationService.getInpatientExpMestById(payload);
       this.logger.info('IntegrationController#getInpatientExpMestById.result', {
         success: result.success,
         hasData: !!result.data,
@@ -558,7 +588,13 @@ export class IntegrationController {
   }> {
     this.logger.info('IntegrationController#getInpatientExpMestDetails.call', data);
     try {
-      const result = await this.integrationService.getInpatientExpMestDetails(data);
+      // Map 'id' from proto to 'aggrExpMestId' for service logic
+      const payload = {
+        ...data,
+        aggrExpMestId: data.aggrExpMestId ?? data.id,
+      };
+
+      const result = await this.integrationService.getInpatientExpMestDetails(payload);
       this.logger.info('IntegrationController#getInpatientExpMestDetails.result', {
         success: result.success,
         dataCount: result.data?.length || 0,
@@ -631,6 +667,86 @@ export class IntegrationController {
       return result;
     } catch (error: any) {
       this.logger.error('IntegrationController#getExpMestMedicinesByIds.error', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  @GrpcMethod('IntegrationService', 'EnrichExpMestsWithSyncStatus')
+  async enrichExpMestsWithSyncStatus(data: {
+    expMestIds: number[];
+    expMestType: string;
+  }): Promise<{
+    syncStatusMap: Record<number, boolean>;
+    workingStateIdMap: Record<number, string>;
+    workingStateMap: Record<string, any>;
+  }> {
+    this.logger.info('IntegrationController#enrichExpMestsWithSyncStatus.call', {
+      expMestIdsCount: data.expMestIds?.length || 0,
+      expMestType: data.expMestType,
+    });
+
+    try {
+      const result = await this.expMestEnrichmentService.enrichExpMestsWithSyncStatus(
+        data.expMestIds || [],
+        data.expMestType,
+      );
+
+      this.logger.info('IntegrationController#enrichExpMestsWithSyncStatus.result', {
+        syncedCount: Object.values(result.syncStatusMap).filter(Boolean).length,
+        workingStateCount: Object.keys(result.workingStateMap).length,
+      });
+
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationController#enrichExpMestsWithSyncStatus.error', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  @GrpcMethod('IntegrationService', 'AutoUpdateExpMestSttId')
+  async autoUpdateExpMestSttId(data: {
+    expMestIds: number[];
+    expMestType: string;
+    userId: string;
+    hisDataMap?: Record<number, any>;
+  }): Promise<{
+    updatedCount: number;
+    updatedExpMestIds: number[];
+  }> {
+    this.logger.info('IntegrationController#autoUpdateExpMestSttId.call', {
+      expMestIdsCount: data.expMestIds?.length || 0,
+      expMestType: data.expMestType,
+      userId: data.userId,
+    });
+
+    try {
+      // Convert plain object to Map
+      const hisDataMap = new Map<number, any>();
+      if (data.hisDataMap) {
+        Object.entries(data.hisDataMap).forEach(([key, value]) => {
+          hisDataMap.set(Number(key), value);
+        });
+      }
+
+      const result = await this.expMestAutoUpdateService.autoUpdateExpMestSttId(
+        data.expMestIds || [],
+        data.expMestType,
+        hisDataMap,
+      );
+
+      this.logger.info('IntegrationController#autoUpdateExpMestSttId.result', {
+        updatedCount: result.updatedCount,
+      });
+
+      return result;
+    } catch (error: any) {
+      this.logger.error('IntegrationController#autoUpdateExpMestSttId.error', {
         error: error.message,
         stack: error.stack,
       });

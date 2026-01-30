@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package machine;
+
+message Machine {
+    string id = 1;
+    string code = 2;
+    string name = 3;
+    string categoryId = 4;
+    string statusId = 5;
+    string unitId = 6;
+    string vendorId = 7;
+    string manufacturerCountryId = 8;
+    string fundingSourceId = 9;
+    string serialNumber = 10;
+    string model = 11;
+    int32 manufacturingYear = 12;
+    string purchaseDate = 13;
+    string warrantyExpirationDate = 14;
+    string description = 15;
+    string createdAt = 16;
+    string updatedAt = 17;
+    string createdBy = 18;
+    string updatedBy = 19;
+    int32 version = 20;
+    int32 isActive = 21;
+    string branchId = 22;
+    string departmentId = 23;
+    repeated MachineDocument documents = 24;
+    string manufacturerId = 25;
+    string managementDepartmentId = 26;
+}
+
+message MachineList {
+    repeated Machine data = 1;
+}
+
+message CreateMachineInput {
+    string code = 1;
+    string name = 2;
+    string categoryId = 3;
+    string statusId = 4;
+    string unitId = 5;
+    string vendorId = 6;
+    string manufacturerCountryId = 7;
+    string manufacturerId = 20;
+    string fundingSourceId = 8;
+    string serialNumber = 9;
+    string model = 10;
+    int32 manufacturingYear = 11;
+    string purchaseDate = 12;
+    string warrantyExpirationDate = 13;
+    string description = 14;
+    string branchId = 15;
+    string departmentId = 16;
+    string transferDate = 17;
+    string transferTypeId = 18;
+    string managementDepartmentId = 21;
+    string createdBy = 19;
+}
+
+message UpdateMachineInput {
+    string id = 1;
+    string code = 2;
+    string name = 3;
+    string categoryId = 4;
+    string statusId = 5;
+    string unitId = 6;
+    string vendorId = 7;
+    string manufacturerCountryId = 8;
+    string manufacturerId = 20;
+    string fundingSourceId = 9;
+    string serialNumber = 10;
+    string model = 11;
+    int32 manufacturingYear = 12;
+    string purchaseDate = 13;
+    string warrantyExpirationDate = 14;
+    string description = 15;
+    string managementDepartmentId = 17;
+    string updatedBy = 16;
+}

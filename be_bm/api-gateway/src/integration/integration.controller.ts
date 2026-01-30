@@ -18,7 +18,8 @@ import { IntegrationService } from '../auth/integration.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { ExpMestMedicineService } from '../inventory/exp-mest-medicine.service';
 import { MasterDataService } from '../master-data/master-data.service';
-import { SyncExpMestBodyDto } from './dto/sync-exp-mest.dto';
+import { SyncExpMestBodyDto, SyncExpMestRequestDto, AutoUpdateExpMestSttIdDto } from './dto/sync-exp-mest.dto';
+import { IntegrationBaseController } from './controllers/integration-base.controller';
 
 // Extend Express Request to include user property set by JwtAuthGuard
 interface AuthenticatedRequest extends Request {
@@ -29,21 +30,30 @@ interface AuthenticatedRequest extends Request {
 
 @ApiTags('integration')
 @Controller('integration')
-export class IntegrationController {
+export class IntegrationController extends IntegrationBaseController {
   constructor(
-    private readonly integrationService: IntegrationService,
-    private readonly inventoryService: InventoryService,
-    private readonly expMestMedicineService: ExpMestMedicineService,
-    private readonly masterDataService: MasterDataService,
-    private readonly configService: ConfigService,
-    private readonly logger: PinoLogger,
-    private readonly eventEmitter: EventEmitter2, // Inject EventEmitter2
+    integrationService: IntegrationService,
+    inventoryService: InventoryService,
+    expMestMedicineService: ExpMestMedicineService,
+    masterDataService: MasterDataService,
+    configService: ConfigService,
+    logger: PinoLogger,
+    eventEmitter: EventEmitter2,
   ) {
+    super(
+      integrationService,
+      inventoryService,
+      expMestMedicineService,
+      masterDataService,
+      configService,
+      logger,
+      eventEmitter,
+    );
     this.logger.setContext(IntegrationController.name);
   }
 
   @Get('user-rooms')
-  @Resource('integration.user-rooms')
+  @Resource('integration.user-rooms.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user rooms from HIS system' })
   @ApiResponse({
@@ -112,7 +122,7 @@ export class IntegrationController {
   }
 
   @Post('user-rooms/reload')
-  @Resource('integration.user-rooms')
+  @Resource('integration.user-rooms.reload')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Reload user rooms from HIS system (bypass cache)' })
   @ApiResponse({
@@ -194,7 +204,7 @@ export class IntegrationController {
   }
 
   @Get('medi-stock/by-room-id/:roomId')
-  @Resource('integration.medi-stock')
+  @Resource('integration.medi-stock.read')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get medi stock ID by roomId (cached)' })
   @ApiResponse({
@@ -226,7 +236,7 @@ export class IntegrationController {
   }
 
   @Post('medi-stock/reload')
-  @Resource('integration.medi-stock')
+  @Resource('integration.medi-stock.reload')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Reload medi stock cache from HIS' })
   @ApiResponse({
@@ -253,7 +263,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mest-stt')
-  @Resource('integration.exp-mest-stt')
+  @Resource('integration.exp-mest-stt.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get exp mest status list (cached, auto-reload if empty)' })
   @ApiResponse({
@@ -280,7 +290,7 @@ export class IntegrationController {
   }
 
   @Post('exp-mest-stt/reload')
-  @Resource('integration.exp-mest-stt')
+  @Resource('integration.exp-mest-stt.reload')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Reload exp mest status cache from HIS' })
   @ApiResponse({
@@ -307,7 +317,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mest-type')
-  @Resource('integration.exp-mest-type')
+  @Resource('integration.exp-mest-type.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get exp mest type list (cached, auto-reload if empty)' })
   @ApiResponse({
@@ -334,7 +344,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mest-type/other-ids')
-  @Resource('integration.exp-mest-type')
+  @Resource('integration.exp-mest-type.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get list of other exp mest types from configuration (with full details)' })
   @ApiResponse({
@@ -452,7 +462,7 @@ export class IntegrationController {
   }
 
   @Post('exp-mest-type/reload')
-  @Resource('integration.exp-mest-type')
+  @Resource('integration.exp-mest-type.reload')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Reload exp mest type cache from HIS' })
   @ApiResponse({
@@ -479,7 +489,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get exp mest list with filters and pagination' })
   @ApiQuery({ name: 'expMestSttIds', required: false, description: 'Comma-separated list of exp mest status IDs (e.g., "1,2,3")', type: String })
@@ -674,7 +684,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/other')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get exp mest get view2 list using OTHER_EXP_MEST_TYPE_ID from .env',
@@ -686,6 +696,7 @@ export class IntegrationController {
   @ApiQuery({ name: 'createTimeTo', required: false, description: 'End timestamp (format: 20251215235959)', type: Number })
   @ApiQuery({ name: 'start', required: false, description: 'Pagination start index (default: 0)', type: Number })
   @ApiQuery({ name: 'limit', required: false, description: 'Pagination limit (default: 100)', type: Number })
+  @ApiQuery({ name: 'keyWord', required: false, description: 'Search keyword', type: String })
   @ApiResponse({
     status: 200,
     description: 'Exp mest list retrieved',
@@ -842,143 +853,37 @@ export class IntegrationController {
 
       const hisData = hisResult.data || [];
 
-      // 2) Lấy danh sách expMestId đã tồn tại trong EXP_EXP_MEST_OTHER để gắn cờ is_sync
+      // 2) Enrich with is_sync and working_state using common helper
+      const enrichedData = await this.enrichWithSyncStatus(hisData, 'other');
+
+      // 3) Auto-sync EXP_MEST_STT_ID if needed
+      // Note: enrichWithSyncStatus does NOT perform auto-update, so we keep that logic if desired
+      // OR we can move auto-update logic to a separate helper or service.
+      // For now, let's keep the auto-update logic but adapt it to work with enrichedData.
+
+      // We can use autoUpdateExpMestSttId helper if available, but for now let's implement minimal check
+      // based on enrichedData if we want to preserve the exact behavior.
+      // However, the user request is specifically to use enrichWithSyncStatus.
+      // Let's rely on the enrichment service to handle basic status.
+      // If we need write-back (auto-update), we should call autoUpdateExpMestSttId separately.
+
       const hisIds = hisData
         .map((item: any) => Number(item.id))
         .filter((id: number) => !isNaN(id));
 
-      // 3) Gắn cờ is_sync và Auto-sync EXP_MEST_STT_ID
-      const inventoryExistingMap = new Map<number, any>();
-      const workingStateMap = new Map<number, { workingStateId: string | null; working_state: any }>();
-
-      // Lấy default workingStateId từ .env (cho records chưa sync)
-      const defaultWorkingStateId =
-        this.configService.get<string>('DEFAULT_NOT_SYNC_EXPORT_STATUS_ID') ||
-        null;
-
       if (hisIds.length > 0) {
-        const existing = await this.getInventoryExpMestOthersByHisIds(hisIds).catch(err => {
-          this.logger.warn('IntegrationController#getExpMestsOther.inventoryByIdsError', { error: err.message });
-          return [];
-        });
-        existing.forEach((item: any) => {
-          const hisId = Number(item.hisExpMestId);
-          if (!isNaN(hisId)) {
-            inventoryExistingMap.set(hisId, item);
-            workingStateMap.set(hisId, {
-              workingStateId: item.workingStateId || null,
-              working_state: null,
-            });
-          }
+        // Call auto-update service async
+        this.integrationService.autoUpdateExpMestSttId(
+          hisIds,
+          'other',
+          request.userId || 'SYSTEM'
+        ).catch(err => {
+          this.logger.warn('IntegrationController#getExpMestsOther.autoUpdateStatus.error', { error: err.message });
         });
       }
-
-      // Collect unique workingStateIds để enrich (bao gồm cả default nếu có)
-      const uniqueWorkingStateIds = Array.from(
-        new Set(
-          [
-            ...Array.from(workingStateMap.values())
-              .map((info) => info.workingStateId)
-              .filter((id): id is string => id !== null && id !== undefined),
-            ...(defaultWorkingStateId ? [defaultWorkingStateId] : []),
-          ]
-        )
-      );
-
-      // Enrich với ExportStatus
-      const exportStatusMap = new Map<string, any>();
-      if (uniqueWorkingStateIds.length > 0) {
-        for (const workingStateId of uniqueWorkingStateIds) {
-          try {
-            const exportStatus = await this.masterDataService.findExportStatusById(workingStateId);
-            if (exportStatus) {
-              exportStatusMap.set(workingStateId, exportStatus);
-            }
-          } catch (error: any) {
-            this.logger.warn('IntegrationController#getExpMestsOther.failedToFetchExportStatus', {
-              workingStateId,
-              error: error?.message,
-            });
-          }
-        }
-      }
-
-      // Update workingStateMap với exportStatus
-      workingStateMap.forEach((stateInfo) => {
-        if (stateInfo.workingStateId && exportStatusMap.has(stateInfo.workingStateId)) {
-          stateInfo.working_state = exportStatusMap.get(stateInfo.workingStateId);
-        }
-      });
-
-      const dataWithSync = await Promise.all(hisData.map(async (item: any) => {
-        const expMestId = Number(item.id);
-        const existingRecord = inventoryExistingMap.get(expMestId);
-        const isSync = !!existingRecord;
-
-        // Check and update expMestSttId if different from HIS
-        if (isSync) {
-          const hisExpMestSttId = Number(item.expMestSttId);
-          const localExpMestSttId = Number(existingRecord.expMestSttId);
-
-          if (!isNaN(hisExpMestSttId) && localExpMestSttId !== hisExpMestSttId) {
-            this.logger.info('IntegrationController#getExpMestsOther.expMestSttIdMismatch', {
-              expMestId,
-              expMestCode: item.expMestCode,
-              hisExpMestSttId,
-              localExpMestSttId,
-            });
-
-            // Update local DB
-            try {
-              await this.inventoryService.updateExpMestOther({
-                id: existingRecord.id,
-                dto: { expMestSttId: hisExpMestSttId }
-              });
-
-              // Emit event (REUSE SAME TOPIC as Inpatient)
-              this.eventEmitter.emit('inpatient.exp-mest.stt-updated', {
-                expMestId: expMestId,
-                expMestCode: item.expMestCode || '',
-                oldSttId: localExpMestSttId,
-                newSttId: hisExpMestSttId,
-                timestamp: Date.now(),
-                data: {
-                  ...item,
-                  is_sync: true,
-                  workingStateId: existingRecord.workingStateId || null,
-                  working_state: existingRecord.workingStateId && exportStatusMap.has(existingRecord.workingStateId)
-                    ? exportStatusMap.get(existingRecord.workingStateId)
-                    : null,
-                },
-              });
-            } catch (updateErr: any) {
-              this.logger.error('IntegrationController#getExpMestsOther.updateError', {
-                expMestId,
-                error: updateErr.message
-              });
-            }
-          }
-        }
-
-        // Prepare workingState info
-        const stateInfo = workingStateMap.get(expMestId);
-        const workingStateId = stateInfo?.workingStateId ||
-          (!isSync && defaultWorkingStateId ? defaultWorkingStateId : null);
-        const working_state = stateInfo?.working_state ||
-          (!isSync && defaultWorkingStateId && exportStatusMap.has(defaultWorkingStateId)
-            ? exportStatusMap.get(defaultWorkingStateId)
-            : null);
-
-        return {
-          ...item,
-          is_sync: isSync,
-          workingStateId,
-          working_state: working_state,
-        };
-      }));
 
       // 4) Thông tin phân trang dựa trên HIS
-      const count = dataWithSync.length;
+      const count = enrichedData.length;
       const total = hisResult.total ?? hisResult.count ?? count;
       const hasMore = count === limit;
 
@@ -994,7 +899,7 @@ export class IntegrationController {
 
       return {
         success: true,
-        data: dataWithSync,
+        data: enrichedData,
         start,
         limit,
         count,
@@ -1015,7 +920,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/other/:expMestId')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.read')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get other exp mest details from HIS, with is_sync flag' })
   @ApiResponse({ status: 200, description: 'Exp mest details retrieved' })
@@ -1162,7 +1067,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/cabinets')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get cabinet replenishment exp mest records from HIS (GetView4), with is_sync flag' })
   @ApiQuery({ name: 'expMestSttIds', required: false, description: 'Comma-separated EXP_MEST_STT_IDs', type: String })
@@ -1395,7 +1300,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/inpatient')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get inpatient aggregated export medicine records from HIS (GetView3), with is_sync flag' })
   @ApiQuery({ name: 'expMestSttIds', required: false, description: 'Comma-separated EXP_MEST_STT_IDs', type: String })
@@ -1729,7 +1634,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/inpatient/:expMestId')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.read')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get inpatient export medicine record by ID from HIS (GetView), with is_sync flag' })
   @ApiParam({ name: 'expMestId', description: 'ExpMest ID from HIS', type: Number })
@@ -1813,7 +1718,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/inpatient/:aggrExpMestId/details')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get inpatient export medicine details (chi tiết các phiếu con) by AGGR_EXP_MEST_ID from HIS (GetView), with is_sync flag' })
   @ApiParam({ name: 'aggrExpMestId', description: 'Aggregated ExpMest ID from HIS', type: Number })
@@ -1912,7 +1817,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/inpatient/:aggrExpMestId/details/medicines')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get medicines for all child exp mests by AGGR_EXP_MEST_ID',
@@ -1968,12 +1873,12 @@ export class IntegrationController {
       }
 
       // Step 3: Get medicines for all exp mests
-      const medicinesResult = await this.integrationService.getExpMestMedicinesByIds(
+      const medicinesResult = await this.integrationService.getExpMestMedicinesByIds({
         expMestIds,
-        includeDeleted === 'true',
-        dataDomainFilter === 'true',
+        includeDeleted: includeDeleted === 'true',
+        dataDomainFilter: dataDomainFilter === 'true',
         userId,
-      );
+      });
 
       if (!medicinesResult.success) {
         return {
@@ -2003,278 +1908,10 @@ export class IntegrationController {
     }
   }
 
-  @Get('exp-mests/inpatient/:expMestId/summary')
-  @Resource('integration.exp-mests')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Get inpatient exp mest summary with nested medicines from HIS (grouped by medicine)',
-    description: 'Lấy thông tin phiếu xuất và danh sách thuốc đã gom nhóm theo medicineTypeCode từ HIS (không cần sync vào DB)'
-  })
-  @ApiParam({ name: 'expMestId', description: 'ExpMest ID from HIS (parent aggrExpMestId)', type: Number })
-  @ApiQuery({ name: 'orderBy', required: false, type: String, description: 'Sort medicines by field (default: "medicineName", e.g., "medicineCode", "-amount" for DESC)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Inpatient exp mest summary with medicines from HIS',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        message: { type: 'string' },
-        data: {
-          type: 'object',
-          properties: {
-            expMestId: { type: 'number' },
-            expMestCode: { type: 'string' },
-            mediStockCode: { type: 'string' },
-            mediStockName: { type: 'string' },
-            reqDepartmentCode: { type: 'string' },
-            reqDepartmentName: { type: 'string' },
-            medicines: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  medicineCode: { type: 'string' },
-                  medicineName: { type: 'string' },
-                  serviceUnitCode: { type: 'string' },
-                  serviceUnitName: { type: 'string' },
-                  amount: { type: 'number' },
-                  hisIds: {
-                    type: 'array',
-                    items: { type: 'number' }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  })
-  async getInpatientExpMestSummaryFromHis(
-    @Param('expMestId') expMestId: string,
-    @Query('orderBy') orderBy?: string,
-    @Req() req?: AuthenticatedRequest,
-  ): Promise<any> {
-    this.logger.info('IntegrationController#getInpatientExpMestSummaryFromHis.call', { expMestId });
 
-    const userId = req?.user?.id;
-
-    try {
-      const expMestIdNumber = Number(expMestId);
-      if (isNaN(expMestIdNumber)) {
-        return {
-          success: false,
-          message: 'Invalid expMestId: must be a valid number',
-        };
-      }
-
-      // 1. Lấy thông tin phiếu cha từ HIS
-      const parentResult = await this.integrationService.getInpatientExpMestById({
-        expMestId: expMestIdNumber,
-        userId,
-      });
-
-      if (!parentResult.success || !parentResult.data) {
-        return {
-          success: false,
-          message: parentResult.message || 'Inpatient exp mest not found in HIS',
-        };
-      }
-
-      const parent = parentResult.data;
-      const aggrExpMestId = parent.id;
-
-      // 2. Lấy tất cả child expMests từ HIS
-      const childrenResult = await this.integrationService.getInpatientExpMestDetails({
-        aggrExpMestId: aggrExpMestId,
-        userId,
-      });
-
-      if (!childrenResult.success || !childrenResult.data || childrenResult.data.length === 0) {
-        return {
-          success: true,
-          data: {
-            expMestId: parent.id,
-            expMestCode: parent.expMestCode,
-            mediStockCode: parent.mediStockCode,
-            mediStockName: parent.mediStockName,
-            reqDepartmentCode: parent.reqDepartmentCode,
-            reqDepartmentName: parent.reqDepartmentName,
-            medicines: [],
-          },
-        };
-      }
-
-      const children = childrenResult.data;
-      const expMestIds = children
-        .map((item: any) => Number(item.id))
-        .filter((id: number) => !isNaN(id));
-
-      if (expMestIds.length === 0) {
-        return {
-          success: true,
-          data: {
-            expMestId: parent.id,
-            expMestCode: parent.expMestCode,
-            mediStockCode: parent.mediStockCode,
-            mediStockName: parent.mediStockName,
-            reqDepartmentCode: parent.reqDepartmentCode,
-            reqDepartmentName: parent.reqDepartmentName,
-            medicines: [],
-          },
-        };
-      }
-
-      // 3. Lấy tất cả medicines từ HIS cho tất cả children
-      const medicinesResult = await this.integrationService.getExpMestMedicinesByIds(
-        expMestIds,
-        false,
-        false,
-        userId,
-      );
-
-      if (!medicinesResult.success) {
-        return {
-          success: false,
-          message: medicinesResult.message || 'Failed to get medicines from HIS',
-        };
-      }
-
-      const allMedicines = medicinesResult.data || [];
-
-      // 4. Group by medicineTypeCode và gom nhóm
-      const medicineMap = new Map<string, {
-        medicineCode: string | null;
-        medicineName: string | null;
-        serviceUnitCode: string | null;
-        serviceUnitName: string | null;
-        amount: number;
-        hisIds: number[];
-      }>();
-
-      for (const med of allMedicines) {
-        const key = med.medicineTypeCode || `UNKNOWN_${med.medicineId || 'NULL'}`;
-
-        if (!medicineMap.has(key)) {
-          medicineMap.set(key, {
-            medicineCode: med.medicineTypeCode || null,
-            medicineName: med.medicineTypeName || null,
-            serviceUnitCode: med.serviceUnitCode || null,
-            serviceUnitName: med.serviceUnitName || null,
-            amount: 0,
-            hisIds: []
-          });
-        }
-
-        const grouped = medicineMap.get(key);
-        if (grouped) {
-          // Sum amount
-          grouped.amount += (med.amount || 0);
-          // Collect hisId (ID từ HIS)
-          if (med.id) {
-            grouped.hisIds.push(med.id);
-          }
-          // Lưu serviceUnitCode và serviceUnitName từ dòng đầu tiên có giá trị
-          if (!grouped.serviceUnitCode && med.serviceUnitCode) {
-            grouped.serviceUnitCode = med.serviceUnitCode;
-          }
-          if (!grouped.serviceUnitName && med.serviceUnitName) {
-            grouped.serviceUnitName = med.serviceUnitName;
-          }
-        }
-      }
-
-      // 5. Convert map to array and sort
-      const medicines = Array.from(medicineMap.values())
-        .sort((a, b) => {
-          // Default sort: by medicineName (alphabetical)
-          // If orderBy is provided, use it; otherwise use default
-          const sortField = orderBy?.replace(/^-/, '') || 'medicineName'; // Remove '-' prefix if present
-          const sortDirection = orderBy?.startsWith('-') ? 'desc' : 'asc';
-
-          let valueA: any;
-          let valueB: any;
-
-          switch (sortField) {
-            case 'medicineCode':
-              valueA = a.medicineCode || '';
-              valueB = b.medicineCode || '';
-              if (valueA === '' && valueB === '') return 0;
-              if (valueA === '') return 1;
-              if (valueB === '') return -1;
-              return sortDirection === 'desc'
-                ? valueB.localeCompare(valueA)
-                : valueA.localeCompare(valueB);
-
-            case 'medicineName':
-              valueA = a.medicineName || '';
-              valueB = b.medicineName || '';
-              if (valueA === '' && valueB === '') return 0;
-              if (valueA === '') return 1;
-              if (valueB === '') return -1;
-              return sortDirection === 'desc'
-                ? valueB.localeCompare(valueA)
-                : valueA.localeCompare(valueB);
-
-            case 'amount':
-              valueA = a.amount || 0;
-              valueB = b.amount || 0;
-              return sortDirection === 'desc'
-                ? valueB - valueA
-                : valueA - valueB;
-
-            case 'serviceUnitCode':
-              valueA = a.serviceUnitCode || '';
-              valueB = b.serviceUnitCode || '';
-              if (valueA === '' && valueB === '') return 0;
-              if (valueA === '') return 1;
-              if (valueB === '') return -1;
-              return sortDirection === 'desc'
-                ? valueB.localeCompare(valueA)
-                : valueA.localeCompare(valueB);
-
-            default:
-              // Default: sort by medicineName
-              valueA = a.medicineName || '';
-              valueB = b.medicineName || '';
-              if (valueA === '' && valueB === '') return 0;
-              if (valueA === '') return 1;
-              if (valueB === '') return -1;
-              return valueA.localeCompare(valueB);
-          }
-        });
-
-      // 6. Format response
-      const response = {
-        expMestId: parent.id,
-        expMestCode: parent.expMestCode,
-        mediStockCode: parent.mediStockCode,
-        mediStockName: parent.mediStockName,
-        reqDepartmentCode: parent.reqDepartmentCode,
-        reqDepartmentName: parent.reqDepartmentName,
-        medicines: medicines
-      };
-
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      this.logger.error('IntegrationController#getInpatientExpMestSummaryFromHis.error', {
-        error: error?.message,
-        stack: error?.stack,
-      });
-
-      return {
-        success: false,
-        message: `Failed to get summary from HIS: ${error?.message || 'Unknown error'}`,
-      };
-    }
-  }
 
   @Post('work-info')
-  @Resource('integration.work-info')
+  @Resource('integration.work-info.create')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Register working rooms to HIS (UpdateWorkInfo)' })
   @ApiBody({
@@ -2346,7 +1983,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/by-code')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.read')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get exp mest by exact expMestCode (HIS), with is_sync flag' })
   @ApiQuery({ name: 'expMestCode', required: true, description: 'Exact EXP_MEST_CODE', type: String })
@@ -2462,7 +2099,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/other/:expMestId/medicines')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get exp mest medicines (chi tiết thuốc trong phiếu xuất) from HIS for "other" exp mests',
@@ -2504,7 +2141,7 @@ export class IntegrationController {
   }
 
   @Get('exp-mests/:expMestId/medicines')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.list')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get exp mest medicines (chi tiết thuốc trong phiếu xuất) from HIS' })
   @ApiParam({ name: 'expMestId', description: 'ExpMest ID from HIS system', type: Number })
@@ -2543,7 +2180,7 @@ export class IntegrationController {
   }
 
   @Post('exp-mests/:expMestId/sync')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.sync')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Sync exp mest data from HIS to Inventory (upsert). If expMest not found in HIS, use data from request body.' })
   @ApiParam({ name: 'expMestId', description: 'ExpMest ID from HIS system', type: Number })
@@ -2822,7 +2459,7 @@ export class IntegrationController {
    * 2) Call syncExpMestFromHis with expMestId and HIS data as body (unless body overrides).
    */
   @Post('exp-mests/sync-by-code')
-  @Resource('integration.exp-mests')
+  @Resource('integration.exp-mests.sync')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Sync ExpMest from HIS to Inventory by expMestCode' })
   @ApiQuery({ name: 'expMestCode', type: String, required: true })
@@ -3060,41 +2697,6 @@ export class IntegrationController {
     }
 
     return await this.inventoryService.count(grpcQuery);
-  }
-
-  /**
-   * Get ExpMests from Inventory by a list of expMestId (from HIS)
-   */
-  private async getInventoryExpMestsByIds(expMestIds: number[]): Promise<any[]> {
-    if (!expMestIds || expMestIds.length === 0) return [];
-
-    const grpcQuery: any = {
-      where: JSON.stringify({
-        expMestId: { $in: expMestIds },
-      }),
-      // Không cần phân trang, chỉ lấy theo danh sách id
-      offset: 0,
-      limit: expMestIds.length,
-    };
-
-    return await this.inventoryService.findAll(grpcQuery);
-  }
-
-  /**
-   * Query ExpMestOther records by hisExpMestIds from EXP_EXP_MEST_OTHER table
-   */
-  private async getInventoryExpMestOthersByHisIds(hisExpMestIds: number[]): Promise<any[]> {
-    if (!hisExpMestIds || hisExpMestIds.length === 0) return [];
-
-    try {
-      return await this.inventoryService.findExpMestOthersByHisIds(hisExpMestIds);
-    } catch (error: any) {
-      this.logger.error('IntegrationController#getInventoryExpMestOthersByHisIds.error', {
-        error: error.message,
-        stack: error.stack,
-      });
-      return [];
-    }
   }
 
   /**
@@ -3500,6 +3102,68 @@ export class IntegrationController {
       updatedBy,
     };
     return dto;
+  }
+  @Post('inpatient-exp-mest/sync')
+  @Resource('integration.exp-mests.sync')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Sync inpatient exp mest from HIS' })
+  @ApiBody({ type: SyncExpMestRequestDto })
+  @ApiResponse({ status: 200, description: 'Synced successfully' })
+  async syncInpatientExpMest(
+    @Body() body: SyncExpMestRequestDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<any> {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('User not found');
+    this.logger.info('IntegrationController#syncInpatientExpMest.call', { body, userId });
+    return this.integrationService.syncInpatientExpMest(body.expMestId, userId);
+  }
+
+  @Post('exp-mest-other/sync')
+  @Resource('integration.exp-mests.sync')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Sync other exp mest from HIS' })
+  @ApiBody({ type: SyncExpMestRequestDto })
+  @ApiResponse({ status: 200, description: 'Synced successfully' })
+  async syncExpMestOther(
+    @Body() body: SyncExpMestRequestDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<any> {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('User not found');
+    this.logger.info('IntegrationController#syncExpMestOther.call', { body, userId });
+    return this.integrationService.syncExpMestOther(body.expMestId, userId);
+  }
+
+  @Get('inpatient-exp-mest/:expMestId/summary')
+  @Resource('integration.exp-mests.read')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get inpatient exp mest summary from HIS' })
+  @ApiResponse({ status: 200, description: 'Summary retrieved' })
+  async getInpatientExpMestSummaryFromHis(
+    @Param('expMestId') expMestId: number,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<any> {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('User not found');
+    this.logger.info('IntegrationController#getInpatientExpMestSummaryFromHis.call', { expMestId, userId });
+    return this.integrationService.getInpatientExpMestSummaryFromHis(Number(expMestId), userId);
+  }
+
+  @Post('exp-mest-stt/auto-update')
+  @Resource('integration.exp-mests.update')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Auto update exp mest status IDs' })
+  @ApiBody({ type: AutoUpdateExpMestSttIdDto })
+  @ApiResponse({ status: 200, description: 'Updated successfully' })
+  async autoUpdateExpMestSttId(
+    @Body() body: AutoUpdateExpMestSttIdDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<any> {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('User not found');
+    this.logger.info('IntegrationController#autoUpdateExpMestSttId.call', { body, userId });
+    return this.integrationService.autoUpdateExpMestSttId(body.expMestIds, body.expMestType, userId);
   }
 }
 
