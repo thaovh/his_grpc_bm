@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package auth;
+
+import "auth/messages.proto";
+
+message LoginRequest {
+  string username = 1; // username or email
+  string password = 2;
+  string deviceId = 3; // optional
+  string ipAddress = 4; // optional
+  string userAgent = 5; // optional
+}
+
+message LoginResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3; // seconds
+  UserInfo user = 4;
+  ExternalToken externalToken = 5; // optional - token from external system (HIS)
+}
+
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+
+message RefreshTokenResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  int64 expiresIn = 3;
+  UserInfo user = 4;
+  ExternalToken externalToken = 5;
+}
+
+message LogoutRequest {
+  string refreshToken = 1;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool isValid = 1;
+  string userId = 2;
+  int64 expiresAt = 3;
+  string employeeCode = 4;
+  repeated string roles = 5;
+}
+
+message RenewExternalTokenRequest {
+  string renewCode = 1; // Optional: if not provided, will get from Redis using userId
+  string userId = 2; // Required: user ID from JWT token
+}
+
+message RenewExternalTokenResponse {
+  ExternalToken externalToken = 1;
+}
+
+message ChangePasswordRequest {
+  string userId = 1;
+  string username = 2;
+  string oldPassword = 3;
+  string newPassword = 4;
+  string deviceId = 5;
+  string ipAddress = 6;
+  string userAgent = 7;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}

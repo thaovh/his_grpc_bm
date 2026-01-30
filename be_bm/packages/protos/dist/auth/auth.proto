@@ -1,0 +1,17 @@
+﻿syntax = "proto3";
+
+package auth;
+
+import "common/commons.proto";
+import "auth/requests.proto";
+
+service AuthService {
+  rpc login (LoginRequest) returns (LoginResponse) {}
+  rpc logout (LogoutRequest) returns (commons.Count) {}
+  rpc refreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {}
+  rpc validateToken (ValidateTokenRequest) returns (ValidateTokenResponse) {}
+  rpc revokeToken (LogoutRequest) returns (commons.Count) {}
+  rpc renewExternalToken (RenewExternalTokenRequest) returns (RenewExternalTokenResponse) {}
+  rpc changePassword (ChangePasswordRequest) returns (ChangePasswordResponse) {}
+}
+

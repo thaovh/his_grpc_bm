@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package master_data;
+
+import "common/commons.proto";
+
+// Machine Document Type - Loại tài liệu máy
+message MachineDocumentType {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  int32 isRequired = 5; // Bắt buộc nhập: 1 = Yes, 0 = No
+  string createdAt = 6;
+  string updatedAt = 7;
+  string createdBy = 8;
+  string updatedBy = 9;
+  int32 version = 10;
+  int32 isActive = 11;
+}
+
+message CreateMachineDocumentTypeInput {
+  string code = 1;
+  string name = 2;
+  int32 sortOrder = 3;
+  int32 isRequired = 4;
+  string createdBy = 5;
+}
+
+message UpdateMachineDocumentTypeInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  int32 isRequired = 5;
+  string updatedBy = 6;
+}
+
+message MachineDocumentTypeList {
+  repeated MachineDocumentType data = 1;
+}

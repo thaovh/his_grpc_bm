@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package master_data;
+
+import "common/commons.proto";
+
+// Machine Category - Danh loại tài sản
+message MachineCategory {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+  string createdBy = 7;
+  string updatedBy = 8;
+  int32 version = 9;
+  int32 isActive = 10;
+}
+
+message CreateMachineCategoryInput {
+  string code = 1;
+  string name = 2;
+  int32 sortOrder = 3;
+  string createdBy = 4;
+}
+
+message UpdateMachineCategoryInput {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  int32 sortOrder = 4;
+  string updatedBy = 5;
+}
+
+message MachineCategoryList {
+  repeated MachineCategory data = 1;
+}
